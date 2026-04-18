@@ -1,0 +1,501 @@
+import { useState, useEffect, useRef, useCallback } from "react";
+
+const ep = () => ({ name: "", dates: "", birthplace: "" });
+const emptyMarriage = () => ({ date: "", location: "", dedication: "" });
+const emptyCustomer = () => ({ email: "", orderNumber: "", notes: "", mailingList: false });
+const has = (p) => !!(p.name || p.dates || p.birthplace);
+const done = (p) => !!p.name;
+const hasMar = (m) => !!(m.date || m.location || m.dedication);
+const doneMar = (m) => !!(m.date);
+
+const INIT = {
+  customer: emptyCustomer(),
+  spouse1: ep(), spouse2: ep(),
+  s1_father: ep(), s1_mother: ep(),
+  s2_father: ep(), s2_mother: ep(),
+  s1_gf_father: ep(), s1_gf_mother: ep(),
+  s1_gm_father: ep(), s1_gm_mother: ep(),
+  s2_gf_father: ep(), s2_gf_mother: ep(),
+  s2_gm_father: ep(), s2_gm_mother: ep(),
+  marriage: emptyMarriage(),
+  children: [ep()],
+};
+
+const ANCESTOR_IDS = [
+  "spouse1", "spouse2",
+  "s1_father", "s1_mother", "s2_father", "s2_mother",
+  "s1_gf_father", "s1_gf_mother", "s1_gm_father", "s1_gm_mother",
+  "s2_gf_father", "s2_gf_mother", "s2_gm_father", "s2_gm_mother",
+];
+
+/* ═══════════════ Input field helper ═══════════════ */
+function Field({ label, value, onChange, placeholder, type = "text", autoFocus = false }) {
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <label style={{ display: "block", fontSize: 10, fontWeight: 600, color: "#9a8468", letterSpacing: "1.2px", textTransform: "uppercase", marginBottom: 4 }}>{label}</label>
+      <input autoFocus={autoFocus} type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+        style={{ width: "100%", padding: "8px 11px", fontSize: 13.5, fontFamily: "'DM Sans',sans-serif", color: "#3d2e1e", border: "1px solid #e0d5c4", borderRadius: 8, background: "#faf7f2", outline: "none", boxSizing: "border-box", transition: "border-color .2s" }}
+        onFocus={e => e.target.style.borderColor = "#b8a080"} onBlur={e => e.target.style.borderColor = "#e0d5c4"} />
+    </div>
+  );
+}
+
+/* ═══════════════ Popup: Person fields ═══════════════ */
+function PersonPopup({ person, label, onSave, anchorRect, containerRect }) {
+  const [draft, setDraft] = useState({ ...person });
+  const popRef = useRef(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+
+  useEffect(() => {
+    if (!anchorRect || !containerRect || !popRef.current) return;
+    const popW = 300, popH = popRef.current.offsetHeight || 220;
+    let left = anchorRect.left + anchorRect.width / 2 - containerRect.left - popW / 2;
+    let top = anchorRect.bottom - containerRect.top + 12;
+    if (left < 8) left = 8;
+    if (left + popW > containerRect.width - 8) left = containerRect.width - popW - 8;
+    if (top + popH > containerRect.height - 8) top = anchorRect.top - containerRect.top - popH - 12;
+    setPos({ top, left });
+  }, [anchorRect, containerRect]);
+
+  useEffect(() => {
+    const h = (e) => { if (popRef.current && !popRef.current.contains(e.target)) onSave(draft); };
+    const t = setTimeout(() => document.addEventListener("mousedown", h), 50);
+    return () => { clearTimeout(t); document.removeEventListener("mousedown", h); };
+  }, [draft, onSave]);
+
+  useEffect(() => {
+    const h = (e) => { if (e.key === "Escape") onSave(draft); };
+    document.addEventListener("keydown", h);
+    return () => document.removeEventListener("keydown", h);
+  }, [draft, onSave]);
+
+  return (
+    <div ref={popRef} style={{
+      position: "absolute", top: pos.top, left: pos.left, width: 300, zIndex: 100,
+      background: "#fffdf9", border: "1px solid #d4c4ac", borderRadius: 14,
+      boxShadow: "0 12px 48px rgba(80,60,30,.18), 0 2px 8px rgba(80,60,30,.08)",
+      padding: "20px 18px 16px", fontFamily: "'DM Sans',sans-serif",
+      animation: "popIn .2s ease-out",
+    }}>
+      <style>{`@keyframes popIn{from{opacity:0;transform:translateY(-6px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}`}</style>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+        <span style={{ fontFamily: "'Playfair Display',serif", fontSize: 15, fontWeight: 700, color: "#5a3e28" }}>{label}</span>
+        <button onClick={() => onSave(draft)} style={{ width: 26, height: 26, borderRadius: "50%", border: "1px solid #e0d5c4", background: "#f8f4ee", cursor: "pointer", fontSize: 14, color: "#9a8468", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+      </div>
+      <Field label="Full name" value={draft.name} onChange={v => setDraft(p => ({ ...p, name: v }))} placeholder="e.g. Eleanor Mae Johnson" autoFocus />
+      <Field label="Dates" value={draft.dates} onChange={v => setDraft(p => ({ ...p, dates: v }))} placeholder="e.g. 1920–1985 or Jul 12, 1948" />
+      <div style={{ marginBottom: 0 }}>
+        <label style={{ display: "block", fontSize: 10, fontWeight: 600, color: "#9a8468", letterSpacing: "1.2px", textTransform: "uppercase", marginBottom: 4 }}>Birthplace</label>
+        <input type="text" value={draft.birthplace} onChange={e => setDraft(p => ({ ...p, birthplace: e.target.value }))} placeholder="e.g. Atlanta, Georgia"
+          style={{ width: "100%", padding: "8px 11px", fontSize: 13.5, fontFamily: "'DM Sans',sans-serif", color: "#3d2e1e", border: "1px solid #e0d5c4", borderRadius: 8, background: "#faf7f2", outline: "none", boxSizing: "border-box" }}
+          onFocus={e => e.target.style.borderColor = "#b8a080"} onBlur={e => e.target.style.borderColor = "#e0d5c4"} />
+      </div>
+      <button onClick={() => onSave(draft)} style={{ width: "100%", marginTop: 14, padding: "9px 0", background: "#6b4c3b", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: "pointer", transition: "background .2s" }}
+        onMouseEnter={e => e.currentTarget.style.background = "#56392a"} onMouseLeave={e => e.currentTarget.style.background = "#6b4c3b"}>Done</button>
+    </div>
+  );
+}
+
+/* ═══════════════ Popup: Marriage fields ═══════════════ */
+function MarriagePopup({ marriage, onSave, anchorRect, containerRect }) {
+  const [draft, setDraft] = useState({ ...marriage });
+  const popRef = useRef(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+
+  useEffect(() => {
+    if (!anchorRect || !containerRect || !popRef.current) return;
+    const popW = 320, popH = popRef.current.offsetHeight || 280;
+    let left = anchorRect.left + anchorRect.width / 2 - containerRect.left - popW / 2;
+    let top = anchorRect.bottom - containerRect.top + 12;
+    if (left < 8) left = 8;
+    if (left + popW > containerRect.width - 8) left = containerRect.width - popW - 8;
+    if (top + popH > containerRect.height - 8) top = anchorRect.top - containerRect.top - popH - 12;
+    setPos({ top, left });
+  }, [anchorRect, containerRect]);
+
+  useEffect(() => {
+    const h = (e) => { if (popRef.current && !popRef.current.contains(e.target)) onSave(draft); };
+    const t = setTimeout(() => document.addEventListener("mousedown", h), 50);
+    return () => { clearTimeout(t); document.removeEventListener("mousedown", h); };
+  }, [draft, onSave]);
+
+  useEffect(() => {
+    const h = (e) => { if (e.key === "Escape") onSave(draft); };
+    document.addEventListener("keydown", h);
+    return () => document.removeEventListener("keydown", h);
+  }, [draft, onSave]);
+
+  return (
+    <div ref={popRef} style={{
+      position: "absolute", top: pos.top, left: pos.left, width: 320, zIndex: 100,
+      background: "#fffdf9", border: "1px solid #d4c4ac", borderRadius: 14,
+      boxShadow: "0 12px 48px rgba(80,60,30,.18), 0 2px 8px rgba(80,60,30,.08)",
+      padding: "20px 18px 16px", fontFamily: "'DM Sans',sans-serif",
+      animation: "popIn .2s ease-out",
+    }}>
+      <style>{`@keyframes popIn{from{opacity:0;transform:translateY(-6px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}`}</style>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+        <span style={{ fontFamily: "'Playfair Display',serif", fontSize: 15, fontWeight: 700, color: "#5a3e28" }}>Marriage details</span>
+        <button onClick={() => onSave(draft)} style={{ width: 26, height: 26, borderRadius: "50%", border: "1px solid #e0d5c4", background: "#f8f4ee", cursor: "pointer", fontSize: 14, color: "#9a8468", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+      </div>
+      <Field label="Marriage date" value={draft.date} onChange={v => setDraft(p => ({ ...p, date: v }))} placeholder="e.g. June 14, 2024" autoFocus />
+      <Field label="Wedding location" value={draft.location} onChange={v => setDraft(p => ({ ...p, location: v }))} placeholder="e.g. Savannah, Georgia" />
+      <div style={{ marginBottom: 0 }}>
+        <label style={{ display: "block", fontSize: 10, fontWeight: 600, color: "#9a8468", letterSpacing: "1.2px", textTransform: "uppercase", marginBottom: 4 }}>Dedication or message</label>
+        <textarea value={draft.dedication} onChange={e => setDraft(p => ({ ...p, dedication: e.target.value }))}
+          placeholder={"e.g. Two families, one love.\nOr a short poem, quote, Bible verse…"} rows={3}
+          style={{ width: "100%", padding: "8px 11px", fontSize: 13, fontFamily: "'DM Sans',sans-serif", color: "#3d2e1e", border: "1px solid #e0d5c4", borderRadius: 8, background: "#faf7f2", outline: "none", boxSizing: "border-box", resize: "vertical", lineHeight: 1.5 }}
+          onFocus={e => e.target.style.borderColor = "#b8a080"} onBlur={e => e.target.style.borderColor = "#e0d5c4"} />
+      </div>
+      <button onClick={() => onSave(draft)} style={{ width: "100%", marginTop: 14, padding: "9px 0", background: "#6b4c3b", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: "pointer", transition: "background .2s" }}
+        onMouseEnter={e => e.currentTarget.style.background = "#56392a"} onMouseLeave={e => e.currentTarget.style.background = "#6b4c3b"}>Done</button>
+    </div>
+  );
+}
+
+/* ═══════════════ Tree Node ═══════════════ */
+function TreeNode({ id, label, person, onClick, x, y, w = 110, h = 52 }) {
+  const completed = done(person);
+  const nodeRef = useRef(null);
+  return (
+    <g ref={nodeRef} style={{ cursor: "pointer" }} onClick={() => { onClick(id, nodeRef.current?.getBoundingClientRect()); }}>
+      <rect x={x - w / 2 + 2} y={y + 2} width={w} height={h} rx={10} fill="#00000008" />
+      <rect x={x - w / 2} y={y} width={w} height={h} rx={10}
+        fill={completed ? "#f9f6f0" : "#fff"} stroke={completed ? "#b8a47c" : "#ddd5c6"} strokeWidth={completed ? 1.5 : 1} />
+      {completed && (
+        <g>
+          <circle cx={x + w / 2 - 8} cy={y + 8} r={9} fill="#6b4c3b" />
+          <path d={`M${x + w / 2 - 12} ${y + 8} l3 3 5-5`} fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </g>
+      )}
+      <text x={x} y={completed ? y + h / 2 - 7 : y + h / 2 - 4} textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight="600" fill="#5a3e28" fontFamily="'Playfair Display',serif">{label}</text>
+      {completed ? (
+        <text x={x} y={y + h / 2 + 8} textAnchor="middle" dominantBaseline="central" fontSize={9.5} fill="#9a8468" fontFamily="'DM Sans',sans-serif">
+          {person.name.length > 16 ? person.name.slice(0, 15) + "…" : person.name}
+        </text>
+      ) : (
+        <text x={x} y={y + h / 2 + 8} textAnchor="middle" dominantBaseline="central" fontSize={9} fill="#c0b49e" fontFamily="'DM Sans',sans-serif" fontStyle="italic">click to add</text>
+      )}
+    </g>
+  );
+}
+
+/* ═══════════════ Marriage Node ═══════════════ */
+function MarriageNode({ marriage, onClick, x, y }) {
+  const completed = doneMar(marriage);
+  const nodeRef = useRef(null);
+  const w = 170, h = 60, rx = 30;
+  const preview = completed ? marriage.date + (marriage.location ? ` · ${marriage.location}` : "") : null;
+  const trimmed = preview && preview.length > 26 ? preview.slice(0, 25) + "…" : preview;
+
+  return (
+    <g ref={nodeRef} style={{ cursor: "pointer" }} onClick={() => { onClick("marriage", nodeRef.current?.getBoundingClientRect()); }}>
+      <ellipse cx={x} cy={y + h / 2} rx={w / 2 + 6} ry={h / 2 + 6} fill="#c4a88220" />
+      <rect x={x - w / 2 + 2} y={y + 2} width={w} height={h} rx={rx} fill="#00000006" />
+      <rect x={x - w / 2} y={y} width={w} height={h} rx={rx}
+        fill={completed ? "#fdf8ee" : "#fff"} stroke={completed ? "#c4a87c" : "#ddd5c6"} strokeWidth={completed ? 1.5 : 1} />
+      <circle cx={x - w / 2 + 24} cy={y + h / 2} r={10} fill="none" stroke={completed ? "#c4a87c" : "#ddd5c6"} strokeWidth="1" />
+      <circle cx={x - w / 2 + 24} cy={y + h / 2} r={6} fill="none" stroke={completed ? "#c4a87c" : "#ddd5c6"} strokeWidth="0.7" />
+      {completed && (
+        <g>
+          <circle cx={x + w / 2 - 10} cy={y + 10} r={9} fill="#6b4c3b" />
+          <path d={`M${x + w / 2 - 14} ${y + 10} l3 3 5-5`} fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </g>
+      )}
+      <text x={x + 6} y={completed ? y + h / 2 - 7 : y + h / 2 - 3} textAnchor="middle" dominantBaseline="central" fontSize={11.5} fontWeight="600" fill="#5a3e28" fontFamily="'Playfair Display',serif">Marriage</text>
+      {completed ? (
+        <text x={x + 6} y={y + h / 2 + 8} textAnchor="middle" dominantBaseline="central" fontSize={8.5} fill="#9a8468" fontFamily="'DM Sans',sans-serif">{trimmed}</text>
+      ) : (
+        <text x={x + 6} y={y + h / 2 + 9} textAnchor="middle" dominantBaseline="central" fontSize={8.5} fill="#c0b49e" fontFamily="'DM Sans',sans-serif" fontStyle="italic">click to add details</text>
+      )}
+    </g>
+  );
+}
+
+/* ═══════════════ Branch Lines ═══════════════ */
+function HBranch({ parentX, parentY, childXs, childY }) {
+  const midY = parentY + (childY - parentY) * 0.5;
+  const paths = [];
+  paths.push(<line key="pv" x1={parentX} y1={parentY} x2={parentX} y2={midY} stroke="#d4c4ac" strokeWidth="1.2" />);
+  if (childXs.length > 1) paths.push(<line key="hb" x1={Math.min(...childXs)} y1={midY} x2={Math.max(...childXs)} y2={midY} stroke="#d4c4ac" strokeWidth="1.2" />);
+  childXs.forEach((cx, i) => paths.push(<line key={`cv${i}`} x1={cx} y1={midY} x2={cx} y2={childY} stroke="#d4c4ac" strokeWidth="1.2" />));
+  return <>{paths}</>;
+}
+
+/* ═══════════════ Edition Toggle ═══════════════ */
+function EditionToggle({ edition, onChange }) {
+  const opts = [
+    { key: "child", label: "Child edition", icon: "🌳" },
+    { key: "couple", label: "Couple / family edition", icon: "💍" },
+  ];
+  return (
+    <div style={{ display: "inline-flex", background: "#f0ebe2", borderRadius: 10, padding: 3 }}>
+      {opts.map(o => {
+        const active = edition === o.key;
+        return (
+          <button key={o.key} onClick={() => onChange(o.key)} style={{
+            padding: "7px 16px", borderRadius: 8, border: "none",
+            background: active ? "#fff" : "transparent",
+            boxShadow: active ? "0 1px 4px rgba(80,60,30,.12)" : "none",
+            color: active ? "#3d2e1e" : "#9a8468",
+            fontSize: 12, fontWeight: active ? 600 : 400,
+            fontFamily: "'DM Sans',sans-serif", cursor: "pointer",
+            transition: "all .2s", display: "flex", alignItems: "center", gap: 5,
+          }}>
+            <span style={{ fontSize: 13 }}>{o.icon}</span> {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ═══════════════ Customer Info Panel ═══════════════ */
+function CustomerInfoPanel({ customer, onChange }) {
+  const [expanded, setExpanded] = useState(true);
+  return (
+    <div style={{
+      maxWidth: 940, margin: "0 auto", padding: "0 28px",
+    }}>
+      <button onClick={() => setExpanded(!expanded)} style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        width: "100%", padding: "10px 16px", borderRadius: 10,
+        border: "1px solid #e0d5c4", background: "#fffdf9", cursor: "pointer",
+        fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#5a3e28", fontWeight: 500,
+      }}>
+        <span>Your details {customer.email ? `— ${customer.email}` : ""}</span>
+        <span style={{ fontSize: 11, color: "#9a8468" }}>{expanded ? "hide" : "show"}</span>
+      </button>
+      {expanded && (
+        <div style={{
+          padding: "16px 16px 12px", marginTop: -1,
+          border: "1px solid #e0d5c4", borderTop: "none",
+          borderRadius: "0 0 10px 10px", background: "#fffdf9",
+        }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+            <Field label="Email address" value={customer.email} onChange={v => onChange({ ...customer, email: v })} placeholder="your@email.com" type="email" />
+            <div>
+              <Field label="Etsy order number (if applicable)" value={customer.orderNumber} onChange={v => onChange({ ...customer, orderNumber: v })} placeholder="e.g. #1234567890" />
+              <p style={{ fontSize: 10.5, color: "#b8a890", margin: "-6px 0 8px", fontStyle: "italic" }}>Find this in your Etsy order confirmation email</p>
+            </div>
+          </div>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 12.5, color: "#6b5a48", userSelect: "none" }}>
+            <input type="checkbox" checked={customer.mailingList} onChange={e => onChange({ ...customer, mailingList: e.target.checked })}
+              style={{ width: 16, height: 16, accentColor: "#6b4c3b", cursor: "pointer" }} />
+            Keep me updated on new collections, designs, and sales
+          </label>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════ MAIN APP ═══════════════ */
+export default function FolktalesTree() {
+  const [data, setData] = useState(INIT);
+  const [edition, setEdition] = useState("child");
+  const [editing, setEditing] = useState(null);
+  const containerRef = useRef(null);
+  const isCouple = edition === "couple";
+
+  const handleNodeClick = useCallback((id, rect) => { setEditing({ id, rect }); }, []);
+
+  const handleSavePerson = useCallback((id, draft) => {
+    setData(prev => {
+      if (id.startsWith("child_")) {
+        const idx = parseInt(id.split("_")[1]);
+        const ch = [...prev.children]; ch[idx] = draft;
+        return { ...prev, children: ch };
+      }
+      return { ...prev, [id]: draft };
+    });
+    setEditing(null);
+  }, []);
+
+  const handleSaveMarriage = useCallback((draft) => {
+    setData(prev => ({ ...prev, marriage: draft }));
+    setEditing(null);
+  }, []);
+
+  const addChild = () => { if (data.children.length < 10) setData(p => ({ ...p, children: [...p.children, ep()] })); };
+  const removeChild = () => { if (data.children.length > 0) setData(p => ({ ...p, children: p.children.slice(0, -1) })); };
+
+  const getPerson = (id) => {
+    if (id.startsWith("child_")) return data.children[parseInt(id.split("_")[1])];
+    return data[id];
+  };
+  const getLabel = (id) => {
+    const map = { spouse1: "Spouse", spouse2: "Spouse", s1_father: "Parent", s1_mother: "Parent", s2_father: "Parent", s2_mother: "Parent", s1_gf_father: "Grandparent", s1_gf_mother: "Grandparent", s1_gm_father: "Grandparent", s1_gm_mother: "Grandparent", s2_gf_father: "Grandparent", s2_gf_mother: "Grandparent", s2_gm_father: "Grandparent", s2_gm_mother: "Grandparent" };
+    if (id.startsWith("child_")) return "Child";
+    return map[id] || id;
+  };
+
+  const totalNodes = ANCESTOR_IDS.length + data.children.length + (isCouple ? 1 : 0);
+  const completedNodes = ANCESTOR_IDS.filter(id => done(data[id])).length
+    + data.children.filter(c => done(c)).length
+    + (isCouple && doneMar(data.marriage) ? 1 : 0);
+
+  const svgW = 880;
+  const nodeW = 110, nodeH = 52;
+  const genGap = 90;
+  const centerX = svgW / 2;
+  const coupleSpread = 70, parentSpread = 170, gpSpread = 80;
+
+  const gpY = 40;
+  const pY = gpY + genGap + nodeH;
+  const cplY = pY + genGap + nodeH;
+  const marriageY = cplY + nodeH + 36;
+  const chY = isCouple ? marriageY + 60 + 36 : cplY + genGap + nodeH;
+
+  const sp1X = centerX - coupleSpread, sp2X = centerX + coupleSpread;
+  const s1fX = centerX - parentSpread - 30, s1mX = centerX - parentSpread + 80;
+  const s2fX = centerX + parentSpread - 80, s2mX = centerX + parentSpread + 30;
+  const s1gf_fX = s1fX - gpSpread / 2, s1gf_mX = s1fX + gpSpread / 2;
+  const s1gm_fX = s1mX - gpSpread / 2, s1gm_mX = s1mX + gpSpread / 2;
+  const s2gf_fX = s2fX - gpSpread / 2, s2gf_mX = s2fX + gpSpread / 2;
+  const s2gm_fX = s2mX - gpSpread / 2, s2gm_mX = s2mX + gpSpread / 2;
+
+  const chCount = data.children.length;
+  const chSpread = Math.min(120, (svgW - 140) / Math.max(chCount, 1));
+  const chStartX = centerX - ((chCount - 1) * chSpread) / 2;
+  const svgH = (chCount > 0 ? chY + nodeH + 50 : (isCouple ? marriageY + 60 + 40 : cplY + nodeH + 50));
+
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(180deg, #f5f0e6 0%, #faf7f1 40%, #fefcf8 100%)", fontFamily: "'DM Sans',sans-serif" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+      {/* ── Header ── */}
+      <div style={{ maxWidth: 940, margin: "0 auto", padding: "20px 28px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <img src="/Logo-HighRes.png" alt="Folktales" style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover" }} />
+          <div>
+            <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 22, fontWeight: 700, color: "#3d2e1e", margin: 0 }}>Folktales</h1>
+            <p style={{ fontSize: 11, color: "#9a8468", margin: 0, fontStyle: "italic", fontFamily: "'Playfair Display',serif" }}>Custom family tree artwork</p>
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: "#5a3e28", fontFamily: "'Playfair Display',serif", lineHeight: 1 }}>{completedNodes}/{totalNodes}</div>
+            <div style={{ fontSize: 9, color: "#9a8468", letterSpacing: "1px", textTransform: "uppercase", marginTop: 2 }}>completed</div>
+          </div>
+          <button onClick={() => alert("Submitting to NocoDB via Cloudflare proxy…")} disabled={completedNodes < 2}
+            style={{ padding: "10px 22px", borderRadius: 8, border: "none", background: completedNodes >= 2 ? "#6b4c3b" : "#c4b8a4", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: completedNodes >= 2 ? "pointer" : "not-allowed", transition: "background .2s" }}>
+            Submit order →
+          </button>
+        </div>
+      </div>
+
+      {/* ── Edition toggle ── */}
+      <div style={{ maxWidth: 940, margin: "0 auto", padding: "14px 28px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+        <EditionToggle edition={edition} onChange={setEdition} />
+        <p style={{ fontSize: 12, color: "#9a8468", margin: 0, textAlign: "center" }}>
+          {isCouple
+            ? "Couple / family edition — celebrate the union with marriage details at the heart of your tree"
+            : "Child edition — the child's name anchors the tree trunk"}
+        </p>
+      </div>
+
+      {/* ── Customer Info ── */}
+      <div style={{ maxWidth: 940, margin: "0 auto", padding: "14px 0 0" }}>
+        <CustomerInfoPanel customer={data.customer} onChange={c => setData(p => ({ ...p, customer: c }))} />
+      </div>
+
+      {/* ── Instruction ── */}
+      <div style={{ maxWidth: 940, margin: "0 auto", padding: "12px 28px 0" }}>
+        <p style={{ fontSize: 12.5, color: "#9a8468", margin: 0, textAlign: "center" }}>
+          Click any node to enter family member details.
+        </p>
+      </div>
+
+      {/* ── Tree ── */}
+      <div ref={containerRef} style={{ maxWidth: 940, margin: "12px auto 0", padding: "0 10px 20px", position: "relative" }}>
+        <svg viewBox={`0 0 ${svgW} ${svgH}`} width="100%" style={{ display: "block" }}>
+          <text x={16} y={gpY + nodeH / 2} textAnchor="start" dominantBaseline="central" fontSize={9} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5" transform={`rotate(-90 16 ${gpY + nodeH / 2})`}>GEN 3</text>
+          <text x={16} y={pY + nodeH / 2} textAnchor="start" dominantBaseline="central" fontSize={9} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5" transform={`rotate(-90 16 ${pY + nodeH / 2})`}>GEN 2</text>
+          <text x={16} y={cplY + nodeH / 2} textAnchor="start" dominantBaseline="central" fontSize={9} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5" transform={`rotate(-90 16 ${cplY + nodeH / 2})`}>GEN 1</text>
+
+          <HBranch parentX={s1fX} parentY={pY} childXs={[s1gf_fX, s1gf_mX]} childY={gpY + nodeH} />
+          <HBranch parentX={s1mX} parentY={pY} childXs={[s1gm_fX, s1gm_mX]} childY={gpY + nodeH} />
+          <HBranch parentX={s2fX} parentY={pY} childXs={[s2gf_fX, s2gf_mX]} childY={gpY + nodeH} />
+          <HBranch parentX={s2mX} parentY={pY} childXs={[s2gm_fX, s2gm_mX]} childY={gpY + nodeH} />
+          <HBranch parentX={sp1X} parentY={cplY} childXs={[s1fX, s1mX]} childY={pY + nodeH} />
+          <HBranch parentX={sp2X} parentY={cplY} childXs={[s2fX, s2mX]} childY={pY + nodeH} />
+
+          <line x1={sp1X + 60} y1={cplY + nodeH / 2} x2={sp2X - 60} y2={cplY + nodeH / 2} stroke="#c4a882" strokeWidth="1.5" strokeDasharray="4 3" />
+          <circle cx={centerX} cy={cplY + nodeH / 2} r={4} fill="#faf7f1" stroke="#c4a882" strokeWidth="1" />
+          <text x={centerX} y={cplY + nodeH / 2 + 0.5} textAnchor="middle" dominantBaseline="central" fontSize={7} fill="#c4a882">{"♥"}</text>
+
+          {isCouple && (
+            <>
+              <line x1={centerX} y1={cplY + nodeH} x2={centerX} y2={marriageY} stroke="#c4a882" strokeWidth="1.2" />
+              {chCount > 0 && <line x1={centerX} y1={marriageY + 60} x2={centerX} y2={chY - 14} stroke="#d4c4ac" strokeWidth="1.2" />}
+            </>
+          )}
+
+          {chCount > 0 && (
+            <HBranch parentX={centerX} parentY={isCouple ? chY - 14 : cplY + nodeH} childXs={data.children.map((_, i) => chStartX + i * chSpread)} childY={chY} />
+          )}
+          {!isCouple && chCount > 0 && (
+            <line x1={centerX} y1={cplY + nodeH} x2={centerX} y2={cplY + nodeH + (chY - cplY - nodeH) * 0.5} stroke="#d4c4ac" strokeWidth="1.2" />
+          )}
+
+          <text x={centerX - parentSpread} y={pY - 10} textAnchor="middle" fontSize={8.5} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5">
+            {data.spouse1.name ? data.spouse1.name.split(" ")[0].toUpperCase() + "'S SIDE" : "SPOUSE 1'S SIDE"}
+          </text>
+          <text x={centerX + parentSpread} y={pY - 10} textAnchor="middle" fontSize={8.5} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5">
+            {data.spouse2.name ? data.spouse2.name.split(" ")[0].toUpperCase() + "'S SIDE" : "SPOUSE 2'S SIDE"}
+          </text>
+          <line x1={centerX} y1={gpY} x2={centerX} y2={pY + nodeH} stroke="#e8dfd0" strokeWidth="0.5" strokeDasharray="3 5" />
+
+          <TreeNode id="s1_gf_father" label="Grandparent" person={data.s1_gf_father} onClick={handleNodeClick} x={s1gf_fX} y={gpY} />
+          <TreeNode id="s1_gf_mother" label="Grandparent" person={data.s1_gf_mother} onClick={handleNodeClick} x={s1gf_mX} y={gpY} />
+          <TreeNode id="s1_gm_father" label="Grandparent" person={data.s1_gm_father} onClick={handleNodeClick} x={s1gm_fX} y={gpY} />
+          <TreeNode id="s1_gm_mother" label="Grandparent" person={data.s1_gm_mother} onClick={handleNodeClick} x={s1gm_mX} y={gpY} />
+          <TreeNode id="s2_gf_father" label="Grandparent" person={data.s2_gf_father} onClick={handleNodeClick} x={s2gf_fX} y={gpY} />
+          <TreeNode id="s2_gf_mother" label="Grandparent" person={data.s2_gf_mother} onClick={handleNodeClick} x={s2gf_mX} y={gpY} />
+          <TreeNode id="s2_gm_father" label="Grandparent" person={data.s2_gm_father} onClick={handleNodeClick} x={s2gm_fX} y={gpY} />
+          <TreeNode id="s2_gm_mother" label="Grandparent" person={data.s2_gm_mother} onClick={handleNodeClick} x={s2gm_mX} y={gpY} />
+
+          <TreeNode id="s1_father" label="Parent" person={data.s1_father} onClick={handleNodeClick} x={s1fX} y={pY} />
+          <TreeNode id="s1_mother" label="Parent" person={data.s1_mother} onClick={handleNodeClick} x={s1mX} y={pY} />
+          <TreeNode id="s2_father" label="Parent" person={data.s2_father} onClick={handleNodeClick} x={s2fX} y={pY} />
+          <TreeNode id="s2_mother" label="Parent" person={data.s2_mother} onClick={handleNodeClick} x={s2mX} y={pY} />
+
+          <TreeNode id="spouse1" label="Spouse" person={data.spouse1} onClick={handleNodeClick} x={sp1X} y={cplY} w={120} h={56} />
+          <TreeNode id="spouse2" label="Spouse" person={data.spouse2} onClick={handleNodeClick} x={sp2X} y={cplY} w={120} h={56} />
+
+          {isCouple && <MarriageNode marriage={data.marriage} onClick={handleNodeClick} x={centerX} y={marriageY} />}
+
+          {data.children.map((child, i) => (
+            <TreeNode key={i} id={`child_${i}`} label="Child" person={child} onClick={handleNodeClick} x={chStartX + i * chSpread} y={chY} />
+          ))}
+          {chCount > 0 && <text x={centerX} y={chY + nodeH + 20} textAnchor="middle" fontSize={8.5} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5">CHILDREN</text>}
+        </svg>
+
+        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 4 }}>
+          <button onClick={removeChild} disabled={data.children.length <= 0}
+            style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid #ddd5c6", background: "#fff", fontSize: 16, color: "#9a8468", cursor: data.children.length <= 0 ? "not-allowed" : "pointer", opacity: data.children.length <= 0 ? 0.3 : 1, display: "flex", alignItems: "center", justifyContent: "center" }}>{"−"}</button>
+          <span style={{ fontSize: 11, color: "#9a8468", alignSelf: "center" }}>{chCount} child{chCount !== 1 ? "ren" : ""}</span>
+          <button onClick={addChild} disabled={data.children.length >= 10}
+            style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid #c4a882", background: "rgba(196,168,130,.08)", fontSize: 16, color: "#6b4c3b", cursor: data.children.length >= 10 ? "not-allowed" : "pointer", opacity: data.children.length >= 10 ? 0.3 : 1, display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+        </div>
+
+        {editing && editing.id === "marriage" && (
+          <MarriagePopup marriage={data.marriage} anchorRect={editing.rect} containerRect={containerRef.current?.getBoundingClientRect()} onSave={handleSaveMarriage} />
+        )}
+        {editing && editing.id !== "marriage" && (
+          <PersonPopup person={getPerson(editing.id)} label={getLabel(editing.id)} anchorRect={editing.rect} containerRect={containerRef.current?.getBoundingClientRect()} onSave={(draft) => handleSavePerson(editing.id, draft)} />
+        )}
+      </div>
+
+      <div style={{ maxWidth: 940, margin: "0 auto", padding: "0 28px 32px", display: "flex", justifyContent: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", background: "#fff", borderRadius: 10, border: "1px solid #e8e2da" }}>
+          <div style={{ width: 120, height: 4, background: "#ece4d6", borderRadius: 2, overflow: "hidden" }}>
+            <div style={{ width: `${totalNodes > 0 ? (completedNodes / totalNodes) * 100 : 0}%`, height: "100%", background: "linear-gradient(90deg,#6b4c3b,#c4a882)", borderRadius: 2, transition: "width .4s ease" }} />
+          </div>
+          <span style={{ fontSize: 11, color: "#9a8468" }}>{totalNodes > 0 ? Math.round((completedNodes / totalNodes) * 100) : 0}% complete</span>
+        </div>
+      </div>
+    </div>
+  );
+}
