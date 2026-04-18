@@ -313,19 +313,107 @@ export default function FolktalesTree() {
   const [edition, setEdition] = useState("child");
   const [genCount, setGenCount] = useState(3);
   const [editing, setEditing] = useState(null);
+  const [submitState, setSubmitState] = useState("idle"); // idle | submitting | success | error
   const containerRef = useRef(null);
   const isCouple = edition === "couple";
   const showGP = genCount === 3;
 
-  // Warn before leaving page
+  // Warn before leaving page (but not after successful submit)
   useEffect(() => {
     const handler = (e) => {
+      if (submitState === "success") return;
       e.preventDefault();
       e.returnValue = "";
     };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
-  }, []);
+  }, [submitState]);
+
+  const handleSubmit = async () => {
+    setSubmitState("submitting");
+    try {
+      // Flatten all data into a single object for NocoDB
+      const payload = {
+        Edition: edition === "couple" ? "Couple / Family Edition" : "Child Edition",
+        Generations: genCount,
+        Email: data.customer.email,
+        EtsyOrderNumber: data.customer.orderNumber,
+        MailingListOptIn: data.customer.mailingList,
+        Spouse1_Name: data.spouse1.name,
+        Spouse1_Dates: data.spouse1.dates,
+        Spouse1_Birthplace: data.spouse1.birthplace,
+        Spouse2_Name: data.spouse2.name,
+        Spouse2_Dates: data.spouse2.dates,
+        Spouse2_Birthplace: data.spouse2.birthplace,
+        Marriage_Date: data.marriage.date,
+        Marriage_Location: data.marriage.location,
+        Marriage_Dedication: data.marriage.dedication,
+        S1_Parent1_Name: data.s1_father.name,
+        S1_Parent1_Dates: data.s1_father.dates,
+        S1_Parent1_Birthplace: data.s1_father.birthplace,
+        S1_Parent2_Name: data.s1_mother.name,
+        S1_Parent2_Dates: data.s1_mother.dates,
+        S1_Parent2_Birthplace: data.s1_mother.birthplace,
+        S2_Parent1_Name: data.s2_father.name,
+        S2_Parent1_Dates: data.s2_father.dates,
+        S2_Parent1_Birthplace: data.s2_father.birthplace,
+        S2_Parent2_Name: data.s2_mother.name,
+        S2_Parent2_Dates: data.s2_mother.dates,
+        S2_Parent2_Birthplace: data.s2_mother.birthplace,
+        S1_GP1_Name: data.s1_gf_father.name,
+        S1_GP1_Dates: data.s1_gf_father.dates,
+        S1_GP1_Birthplace: data.s1_gf_father.birthplace,
+        S1_GP2_Name: data.s1_gf_mother.name,
+        S1_GP2_Dates: data.s1_gf_mother.dates,
+        S1_GP2_Birthplace: data.s1_gf_mother.birthplace,
+        S1_GP3_Name: data.s1_gm_father.name,
+        S1_GP3_Dates: data.s1_gm_father.dates,
+        S1_GP3_Birthplace: data.s1_gm_father.birthplace,
+        S1_GP4_Name: data.s1_gm_mother.name,
+        S1_GP4_Dates: data.s1_gm_mother.dates,
+        S1_GP4_Birthplace: data.s1_gm_mother.birthplace,
+        S2_GP1_Name: data.s2_gf_father.name,
+        S2_GP1_Dates: data.s2_gf_father.dates,
+        S2_GP1_Birthplace: data.s2_gf_father.birthplace,
+        S2_GP2_Name: data.s2_gf_mother.name,
+        S2_GP2_Dates: data.s2_gf_mother.dates,
+        S2_GP2_Birthplace: data.s2_gf_mother.birthplace,
+        S2_GP3_Name: data.s2_gm_father.name,
+        S2_GP3_Dates: data.s2_gm_father.dates,
+        S2_GP3_Birthplace: data.s2_gm_father.birthplace,
+        S2_GP4_Name: data.s2_gm_mother.name,
+        S2_GP4_Dates: data.s2_gm_mother.dates,
+        S2_GP4_Birthplace: data.s2_gm_mother.birthplace,
+        Child1_Name: data.children[0]?.name || "",
+        Child1_Dates: data.children[0]?.dates || "",
+        Child1_Birthplace: data.children[0]?.birthplace || "",
+        Child2_Name: data.children[1]?.name || "",
+        Child2_Dates: data.children[1]?.dates || "",
+        Child2_Birthplace: data.children[1]?.birthplace || "",
+        Child3_Name: data.children[2]?.name || "",
+        Child3_Dates: data.children[2]?.dates || "",
+        Child3_Birthplace: data.children[2]?.birthplace || "",
+        Child4_Name: data.children[3]?.name || "",
+        Child4_Dates: data.children[3]?.dates || "",
+        Child4_Birthplace: data.children[3]?.birthplace || "",
+        Child5_Name: data.children[4]?.name || "",
+        Child5_Dates: data.children[4]?.dates || "",
+        Child5_Birthplace: data.children[4]?.birthplace || "",
+      };
+
+      const response = await fetch("https://folktales-form-proxy.twilight-violet-b3b0.workers.dev/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) throw new Error(`Server responded ${response.status}`);
+      setSubmitState("success");
+    } catch (err) {
+      console.error("Submit error:", err);
+      setSubmitState("error");
+    }
+  };
 
   const handleNodeClick = useCallback((id, rect) => { setEditing({ id, rect }); }, []);
 
@@ -365,14 +453,11 @@ export default function FolktalesTree() {
     + data.children.filter(c => done(c)).length
     + (isCouple && doneMar(data.marriage) ? 1 : 0);
 
-  // SVG Layout — wider spacing to prevent GP overlap
-  const svgW = 960;
-  const nodeW = 110, nodeH = 52;
+  // SVG Layout — positions computed to prevent overlap
+  const svgW = 1100;
+  const nodeW = 98, nodeH = 52;
   const genGap = 90;
   const centerX = svgW / 2;
-  const coupleSpread = 74;
-  const parentSpread = 190;
-  const gpSpread = 100;
 
   const gpY = 40;
   const pY = showGP ? gpY + genGap + nodeH : 40;
@@ -380,27 +465,63 @@ export default function FolktalesTree() {
   const marriageY = cplY + nodeH + 36;
   const chY = isCouple ? marriageY + 60 + 36 : cplY + genGap + nodeH;
 
-  const sp1X = centerX - coupleSpread, sp2X = centerX + coupleSpread;
-  const s1fX = centerX - parentSpread - 30, s1mX = centerX - parentSpread + 80;
-  const s2fX = centerX + parentSpread - 80, s2mX = centerX + parentSpread + 30;
-  const s1gf_fX = s1fX - gpSpread / 2, s1gf_mX = s1fX + gpSpread / 2;
-  const s1gm_fX = s1mX - gpSpread / 2, s1gm_mX = s1mX + gpSpread / 2;
-  const s2gf_fX = s2fX - gpSpread / 2, s2gf_mX = s2fX + gpSpread / 2;
-  const s2gm_fX = s2mX - gpSpread / 2, s2gm_mX = s2mX + gpSpread / 2;
+  // Couple — tight in center
+  const sp1X = centerX - 80, sp2X = centerX + 80;
+
+  // Parents — positioned at GP pair midpoints so branches connect cleanly
+  const s1fX = 190, s1mX = 426;
+  const s2fX = 674, s2mX = 910;
+
+  // Grandparents — evenly spaced, no overlaps (16px within pair, 24px between pairs, 36px center gap)
+  const s1gf_fX = 133, s1gf_mX = 247;
+  const s1gm_fX = 369, s1gm_mX = 483;
+  const s2gf_fX = 617, s2gf_mX = 731;
+  const s2gm_fX = 853, s2gm_mX = 967;
 
   const chCount = data.children.length;
   const chSpread = Math.min(120, (svgW - 140) / Math.max(chCount, 1));
   const chStartX = centerX - ((chCount - 1) * chSpread) / 2;
   const svgH = (chCount > 0 ? chY + nodeH + 50 : (isCouple ? marriageY + 60 + 40 : cplY + nodeH + 50));
 
+  // Success screen
+  if (submitState === "success") {
+    return (
+      <div style={{ minHeight: "100vh", background: "linear-gradient(180deg, #f5f0e6 0%, #faf7f1 40%, #fefcf8 100%)", fontFamily: "'DM Sans',sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <div style={{ textAlign: "center", padding: "60px 28px", maxWidth: 500 }}>
+          <img src="/Logo-HighRes.png" alt="Folktales Collection" style={{ width: 80, height: 80, objectFit: "contain", marginBottom: 20 }} />
+          <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 28, fontWeight: 700, color: "#3d2e1e", margin: "0 0 12px" }}>Thank you!</h1>
+          <p style={{ fontSize: 15, color: "#6b5a48", lineHeight: 1.6, margin: "0 0 8px" }}>
+            Your family tree information has been submitted successfully.
+          </p>
+          <p style={{ fontSize: 13, color: "#9a8468", lineHeight: 1.6, margin: 0 }}>
+            We'll begin working on your custom artwork and will be in touch{data.customer.email ? ` at ${data.customer.email}` : ""} with updates.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(180deg, #f5f0e6 0%, #faf7f1 40%, #fefcf8 100%)", fontFamily: "'DM Sans',sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
+      {/* Error banner */}
+      {submitState === "error" && (
+        <div style={{ maxWidth: 1120, margin: "0 auto", padding: "12px 28px 0" }}>
+          <div style={{ padding: "12px 16px", background: "#fef2f2", border: "1px solid #e8c4c4", borderRadius: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <p style={{ fontSize: 13, color: "#8b3a3a", margin: 0 }}>
+              Something went wrong submitting your form. Please try again, or contact us if the problem persists.
+            </p>
+            <button onClick={() => setSubmitState("idle")} style={{ background: "none", border: "none", fontSize: 18, color: "#8b3a3a", cursor: "pointer", padding: "0 4px" }}>{"\u00d7"}</button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "20px 28px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "20px 28px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <img src="/Logo-HighRes.png" alt="Folktales Collection" style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover" }} />
+          <img src="/Logo-HighRes.png" alt="Folktales Collection" style={{ width: 48, height: 48, objectFit: "contain" }} />
           <div>
             <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 22, fontWeight: 700, color: "#3d2e1e", margin: 0 }}>Folktales Collection</h1>
             <p style={{ fontSize: 11, color: "#9a8468", margin: 0, fontStyle: "italic", fontFamily: "'Playfair Display',serif" }}>Artworks that tell your family story</p>
@@ -411,15 +532,15 @@ export default function FolktalesTree() {
             <div style={{ fontSize: 20, fontWeight: 700, color: "#5a3e28", fontFamily: "'Playfair Display',serif", lineHeight: 1 }}>{completedNodes}/{totalNodes}</div>
             <div style={{ fontSize: 9, color: "#9a8468", letterSpacing: "1px", textTransform: "uppercase", marginTop: 2 }}>completed</div>
           </div>
-          <button onClick={() => alert("Submitting to NocoDB via Cloudflare proxy\u2026")} disabled={completedNodes < 2}
-            style={{ padding: "10px 22px", borderRadius: 8, border: "none", background: completedNodes >= 2 ? "#6b4c3b" : "#c4b8a4", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: completedNodes >= 2 ? "pointer" : "not-allowed", transition: "background .2s" }}>
-            Submit order {"\u2192"}
+          <button onClick={handleSubmit} disabled={completedNodes < 2 || submitState === "submitting"}
+            style={{ padding: "10px 22px", borderRadius: 8, border: "none", background: completedNodes >= 2 && submitState !== "submitting" ? "#6b4c3b" : "#c4b8a4", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: completedNodes >= 2 && submitState !== "submitting" ? "pointer" : "not-allowed", transition: "background .2s" }}>
+            {submitState === "submitting" ? "Submitting..." : "Submit order \u2192"}
           </button>
         </div>
       </div>
 
       {/* Toggles row */}
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "14px 28px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "14px 28px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
         <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}>
           <EditionToggle edition={edition} onChange={setEdition} />
           <GenSelector genCount={genCount} onChange={setGenCount} />
@@ -432,12 +553,12 @@ export default function FolktalesTree() {
       </div>
 
       {/* Customer Info */}
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "14px 0 0" }}>
+      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "14px 0 0" }}>
         <CustomerInfoPanel customer={data.customer} onChange={c => setData(p => ({ ...p, customer: c }))} />
       </div>
 
       {/* Instructions + exit warning */}
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "12px 28px 0", textAlign: "center" }}>
+      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "12px 28px 0", textAlign: "center" }}>
         <p style={{ fontSize: 12.5, color: "#9a8468", margin: "0 0 6px" }}>
           Click any node to enter family member details.
         </p>
@@ -447,7 +568,7 @@ export default function FolktalesTree() {
       </div>
 
       {/* Tree */}
-      <div ref={containerRef} style={{ maxWidth: 960, margin: "12px auto 0", padding: "0 10px 20px", position: "relative" }}>
+      <div ref={containerRef} style={{ maxWidth: 1120, margin: "12px auto 0", padding: "0 10px 20px", position: "relative" }}>
         <svg viewBox={`0 0 ${svgW} ${svgH}`} width="100%" style={{ display: "block" }}>
           {showGP && <text x={16} y={gpY + nodeH / 2} textAnchor="start" dominantBaseline="central" fontSize={9} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5" transform={`rotate(-90 16 ${gpY + nodeH / 2})`}>GEN 3</text>}
           <text x={16} y={pY + nodeH / 2} textAnchor="start" dominantBaseline="central" fontSize={9} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5" transform={`rotate(-90 16 ${pY + nodeH / 2})`}>GEN 2</text>
@@ -466,7 +587,7 @@ export default function FolktalesTree() {
           <HBranch parentX={sp2X} parentY={cplY} childXs={[s2fX, s2mX]} childY={pY + nodeH} />
 
           {/* Couple connector */}
-          <line x1={sp1X + 60} y1={cplY + nodeH / 2} x2={sp2X - 60} y2={cplY + nodeH / 2} stroke="#c4a882" strokeWidth="1.5" strokeDasharray="4 3" />
+          <line x1={sp1X + 49} y1={cplY + nodeH / 2} x2={sp2X - 49} y2={cplY + nodeH / 2} stroke="#c4a882" strokeWidth="1.5" strokeDasharray="4 3" />
           <circle cx={centerX} cy={cplY + nodeH / 2} r={4} fill="#faf7f1" stroke="#c4a882" strokeWidth="1" />
           <text x={centerX} y={cplY + nodeH / 2 + 0.5} textAnchor="middle" dominantBaseline="central" fontSize={7} fill="#c4a882">{"\u2665"}</text>
 
@@ -485,10 +606,10 @@ export default function FolktalesTree() {
           )}
 
           {/* Side labels */}
-          <text x={centerX - parentSpread} y={pY - 10} textAnchor="middle" fontSize={8.5} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5">
+          <text x={(s1fX + s1mX) / 2} y={pY - 10} textAnchor="middle" fontSize={8.5} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5">
             {data.spouse1.name ? data.spouse1.name.split(" ")[0].toUpperCase() + "'S SIDE" : "SPOUSE 1'S SIDE"}
           </text>
-          <text x={centerX + parentSpread} y={pY - 10} textAnchor="middle" fontSize={8.5} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5">
+          <text x={(s2fX + s2mX) / 2} y={pY - 10} textAnchor="middle" fontSize={8.5} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5">
             {data.spouse2.name ? data.spouse2.name.split(" ")[0].toUpperCase() + "'S SIDE" : "SPOUSE 2'S SIDE"}
           </text>
           <line x1={centerX} y1={showGP ? gpY : pY} x2={centerX} y2={pY + nodeH} stroke="#e8dfd0" strokeWidth="0.5" strokeDasharray="3 5" />
@@ -542,7 +663,7 @@ export default function FolktalesTree() {
       </div>
 
       {/* Progress bar */}
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 28px 32px", display: "flex", justifyContent: "center" }}>
+      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 28px 32px", display: "flex", justifyContent: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", background: "#fff", borderRadius: 10, border: "1px solid #e8e2da" }}>
           <div style={{ width: 120, height: 4, background: "#ece4d6", borderRadius: 2, overflow: "hidden" }}>
             <div style={{ width: `${totalNodes > 0 ? (completedNodes / totalNodes) * 100 : 0}%`, height: "100%", background: "linear-gradient(90deg,#6b4c3b,#c4a882)", borderRadius: 2, transition: "width .4s ease" }} />
