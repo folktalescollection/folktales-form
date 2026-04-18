@@ -489,7 +489,7 @@ export default function FolktalesTree() {
       <div style={{ minHeight: "100vh", background: "linear-gradient(180deg, #f5f0e6 0%, #faf7f1 40%, #fefcf8 100%)", fontFamily: "'DM Sans',sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
         <div style={{ textAlign: "center", padding: "60px 28px", maxWidth: 500 }}>
-          <img src="/Logo-HighRes.png" alt="Folktales Collection" style={{ width: 80, height: 80, objectFit: "contain", marginBottom: 20 }} />
+          <img src="/Logo-HighRes.png" alt="Folktales Collection" style={{ width: 88, height: 88, borderRadius: "50%", display: "block", margin: "0 auto 20px" }} />
           <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 28, fontWeight: 700, color: "#3d2e1e", margin: "0 0 12px" }}>Thank you!</h1>
           <p style={{ fontSize: 15, color: "#6b5a48", lineHeight: 1.6, margin: "0 0 8px" }}>
             Your family tree information has been submitted successfully.
@@ -521,7 +521,7 @@ export default function FolktalesTree() {
       {/* Header */}
       <div style={{ maxWidth: 1120, margin: "0 auto", padding: "20px 28px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <img src="/Logo-HighRes.png" alt="Folktales Collection" style={{ width: 48, height: 48, objectFit: "contain" }} />
+          <img src="/Logo-HighRes.png" alt="Folktales Collection" style={{ width: 52, height: 52, borderRadius: "50%", display: "block" }} />
           <div>
             <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 22, fontWeight: 700, color: "#3d2e1e", margin: 0 }}>Folktales Collection</h1>
             <p style={{ fontSize: 11, color: "#9a8468", margin: 0, fontStyle: "italic", fontFamily: "'Playfair Display',serif" }}>Artworks that tell your family story</p>
@@ -539,12 +539,16 @@ export default function FolktalesTree() {
         </div>
       </div>
 
-      {/* Toggles row */}
-      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "14px 28px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}>
-          <EditionToggle edition={edition} onChange={setEdition} />
-          <GenSelector genCount={genCount} onChange={setGenCount} />
-        </div>
+      {/* Step 1: Generation selector */}
+      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "18px 28px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+        <p style={{ fontSize: 12, fontWeight: 600, color: "#6b5a48", margin: 0, letterSpacing: "0.5px" }}>1. Select number of generations</p>
+        <GenSelector genCount={genCount} onChange={setGenCount} />
+      </div>
+
+      {/* Step 2: Edition selector */}
+      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "14px 28px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+        <p style={{ fontSize: 12, fontWeight: 600, color: "#6b5a48", margin: 0, letterSpacing: "0.5px" }}>2. Select edition</p>
+        <EditionToggle edition={edition} onChange={setEdition} />
         <p style={{ fontSize: 12, color: "#9a8468", margin: 0, textAlign: "center" }}>
           {isCouple
             ? "Couple / family edition \u2014 celebrate the union with marriage details at the heart of your tree"
@@ -582,9 +586,21 @@ export default function FolktalesTree() {
             <HBranch parentX={s2mX} parentY={pY} childXs={[s2gm_fX, s2gm_mX]} childY={gpY + nodeH} />
           </>}
 
-          {/* Parent branches */}
-          <HBranch parentX={sp1X} parentY={cplY} childXs={[s1fX, s1mX]} childY={pY + nodeH} />
-          <HBranch parentX={sp2X} parentY={cplY} childXs={[s2fX, s2mX]} childY={pY + nodeH} />
+          {/* Parent-to-Couple branches (parents are above, spouses below) */}
+          {(() => {
+            const midY1 = pY + nodeH + (cplY - pY - nodeH) * 0.5;
+            return <>
+              <line x1={sp1X} y1={cplY} x2={sp1X} y2={midY1} stroke="#d4c4ac" strokeWidth="1.2" />
+              <line x1={s1fX} y1={midY1} x2={s1mX} y2={midY1} stroke="#d4c4ac" strokeWidth="1.2" />
+              <line x1={s1fX} y1={pY + nodeH} x2={s1fX} y2={midY1} stroke="#d4c4ac" strokeWidth="1.2" />
+              <line x1={s1mX} y1={pY + nodeH} x2={s1mX} y2={midY1} stroke="#d4c4ac" strokeWidth="1.2" />
+
+              <line x1={sp2X} y1={cplY} x2={sp2X} y2={midY1} stroke="#d4c4ac" strokeWidth="1.2" />
+              <line x1={s2fX} y1={midY1} x2={s2mX} y2={midY1} stroke="#d4c4ac" strokeWidth="1.2" />
+              <line x1={s2fX} y1={pY + nodeH} x2={s2fX} y2={midY1} stroke="#d4c4ac" strokeWidth="1.2" />
+              <line x1={s2mX} y1={pY + nodeH} x2={s2mX} y2={midY1} stroke="#d4c4ac" strokeWidth="1.2" />
+            </>;
+          })()}
 
           {/* Couple connector */}
           <line x1={sp1X + 49} y1={cplY + nodeH / 2} x2={sp2X - 49} y2={cplY + nodeH / 2} stroke="#c4a882" strokeWidth="1.5" strokeDasharray="4 3" />
