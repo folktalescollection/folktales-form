@@ -130,7 +130,7 @@ function TreeNode({ id, label, person, onClick, x, y, w = 98, h = 52 }) {
   const completed = done(person);
   const nodeRef = useRef(null);
   return (
-    <g ref={nodeRef} style={{ cursor: "pointer" }} onClick={() => { onClick(id, nodeRef.current?.getBoundingClientRect()); }}>
+    <g ref={nodeRef} className="tree-node-hover" onClick={() => { onClick(id, nodeRef.current?.getBoundingClientRect()); }}>
       <rect x={x - w / 2 + 2} y={y + 2} width={w} height={h} rx={10} fill="#00000008" />
       <rect x={x - w / 2} y={y} width={w} height={h} rx={10}
         fill={completed ? "#f9f6f0" : "#fff"} stroke={completed ? "#b8a47c" : "#ddd5c6"} strokeWidth={completed ? 1.5 : 1} />
@@ -159,7 +159,7 @@ function MarriageNode({ marriage, onClick, x, y }) {
   const preview = completed ? marriage.date + (marriage.location ? ` \u00b7 ${marriage.location}` : "") : null;
   const trimmed = preview && preview.length > 26 ? preview.slice(0, 25) + "\u2026" : preview;
   return (
-    <g ref={nodeRef} style={{ cursor: "pointer" }} onClick={() => { onClick("marriage", nodeRef.current?.getBoundingClientRect()); }}>
+    <g ref={nodeRef} className="tree-node-hover" onClick={() => { onClick("marriage", nodeRef.current?.getBoundingClientRect()); }}>
       <ellipse cx={x} cy={y + h / 2} rx={w / 2 + 6} ry={h / 2 + 6} fill="#c4a88220" />
       <rect x={x - w / 2 + 2} y={y + 2} width={w} height={h} rx={rx} fill="#00000006" />
       <rect x={x - w / 2} y={y} width={w} height={h} rx={rx} fill={completed ? "#fdf8ee" : "#fff"} stroke={completed ? "#c4a87c" : "#ddd5c6"} strokeWidth={completed ? 1.5 : 1} />
@@ -333,7 +333,7 @@ export default function FolktalesTree() {
 
   if (submitState === "success") {
     return (
-      <div className="parchment-page" style={{ minHeight: "100vh", background: "#ede4d3", fontFamily: "'DM Sans',sans-serif", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+      <div className="parchment-page" style={{ minHeight: "100vh", background: "#f5efe3", fontFamily: "'DM Sans',sans-serif", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
         <style>{`
           .parchment-page::before {
             content: '';
@@ -342,12 +342,17 @@ export default function FolktalesTree() {
             pointer-events: none;
             z-index: 0;
             background-image:
-              url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23a)' opacity='0.14'/%3E%3C/svg%3E"),
-              url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.012' numOctaves='3' seed='5'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='800' height='800' filter='url(%23b)' opacity='0.08'/%3E%3C/svg%3E"),
-              radial-gradient(ellipse at 50% 0%, transparent 50%, rgba(120,90,50,0.10) 100%),
-              radial-gradient(ellipse at 0% 50%, rgba(100,75,40,0.08) 0%, transparent 60%),
-              radial-gradient(ellipse at 100% 50%, rgba(100,75,40,0.08) 0%, transparent 60%),
-              radial-gradient(ellipse at 50% 100%, rgba(90,65,30,0.12) 0%, transparent 50%);
+              url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='6' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23a)' opacity='0.10'/%3E%3C/svg%3E"),
+              url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='900'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.008' numOctaves='2' seed='7'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='900' height='900' filter='url(%23b)' opacity='0.06'/%3E%3C/svg%3E"),
+              radial-gradient(ellipse at 50% 50%, rgba(245,239,227,0.6) 20%, transparent 70%),
+              radial-gradient(ellipse at 50% 0%, transparent 40%, rgba(140,105,60,0.13) 100%),
+              radial-gradient(ellipse at 0% 50%, rgba(120,85,45,0.11) 0%, transparent 50%),
+              radial-gradient(ellipse at 100% 50%, rgba(120,85,45,0.11) 0%, transparent 50%),
+              radial-gradient(ellipse at 50% 100%, rgba(100,70,30,0.15) 0%, transparent 45%),
+              radial-gradient(ellipse at 0% 0%, rgba(90,60,20,0.10) 0%, transparent 40%),
+              radial-gradient(ellipse at 100% 0%, rgba(90,60,20,0.08) 0%, transparent 40%),
+              radial-gradient(ellipse at 0% 100%, rgba(80,55,20,0.12) 0%, transparent 35%),
+              radial-gradient(ellipse at 100% 100%, rgba(80,55,20,0.12) 0%, transparent 35%);
           }
           .parchment-page > * { position: relative; z-index: 1; }
         `}</style>
@@ -363,7 +368,7 @@ export default function FolktalesTree() {
   }
 
   return (
-    <div className="parchment-page" style={{ minHeight: "100vh", background: "#ede4d3", fontFamily: "'DM Sans',sans-serif", position: "relative" }}>
+    <div className="parchment-page" style={{ minHeight: "100vh", background: "#f5efe3", fontFamily: "'DM Sans',sans-serif", position: "relative" }}>
       <style>{`
         .parchment-page::before {
           content: '';
@@ -372,14 +377,25 @@ export default function FolktalesTree() {
           pointer-events: none;
           z-index: 0;
           background-image:
-            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23a)' opacity='0.14'/%3E%3C/svg%3E"),
-            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.012' numOctaves='3' seed='5'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='800' height='800' filter='url(%23b)' opacity='0.08'/%3E%3C/svg%3E"),
-            radial-gradient(ellipse at 50% 0%, transparent 50%, rgba(120,90,50,0.10) 100%),
-            radial-gradient(ellipse at 0% 50%, rgba(100,75,40,0.08) 0%, transparent 60%),
-            radial-gradient(ellipse at 100% 50%, rgba(100,75,40,0.08) 0%, transparent 60%),
-            radial-gradient(ellipse at 50% 100%, rgba(90,65,30,0.12) 0%, transparent 50%);
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='6' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23a)' opacity='0.10'/%3E%3C/svg%3E"),
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='900'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.008' numOctaves='2' seed='7'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='900' height='900' filter='url(%23b)' opacity='0.06'/%3E%3C/svg%3E"),
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.04 0.01' numOctaves='2' seed='12'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='500' height='500' filter='url(%23c)' opacity='0.04'/%3E%3C/svg%3E"),
+            radial-gradient(ellipse at 50% 50%, rgba(245,239,227,0.6) 20%, transparent 70%),
+            radial-gradient(ellipse at 50% 0%, transparent 40%, rgba(140,105,60,0.13) 100%),
+            radial-gradient(ellipse at 0% 50%, rgba(120,85,45,0.11) 0%, transparent 50%),
+            radial-gradient(ellipse at 100% 50%, rgba(120,85,45,0.11) 0%, transparent 50%),
+            radial-gradient(ellipse at 50% 100%, rgba(100,70,30,0.15) 0%, transparent 45%),
+            radial-gradient(ellipse at 0% 0%, rgba(90,60,20,0.10) 0%, transparent 40%),
+            radial-gradient(ellipse at 100% 0%, rgba(90,60,20,0.08) 0%, transparent 40%),
+            radial-gradient(ellipse at 0% 100%, rgba(80,55,20,0.12) 0%, transparent 35%),
+            radial-gradient(ellipse at 100% 100%, rgba(80,55,20,0.12) 0%, transparent 35%);
         }
         .parchment-page > * { position: relative; z-index: 1; }
+        .tree-node-hover:hover {
+          filter: drop-shadow(3px 4px 6px rgba(40,30,15,0.35));
+          transition: filter 0.2s ease;
+        }
+        .tree-node-hover { transition: filter 0.2s ease; cursor: pointer; }
       `}</style>
       <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
@@ -407,7 +423,7 @@ export default function FolktalesTree() {
             <div style={{ fontSize: 9, color: "#9a8468", letterSpacing: "1px", textTransform: "uppercase", marginTop: 2 }}>completed</div>
           </div>
           <button onClick={handleSubmit} disabled={completedNodes < 2 || submitState === "submitting"}
-            style={{ padding: "10px 22px", borderRadius: 8, border: "none", background: completedNodes >= 2 && submitState !== "submitting" ? "#6b4c3b" : "#c4b8a4", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: completedNodes >= 2 && submitState !== "submitting" ? "pointer" : "not-allowed", transition: "background .2s" }}>
+            style={{ padding: "10px 22px", borderRadius: 8, border: "none", background: submitState === "submitting" ? "#c4b8a4" : completedNodes >= totalNodes ? "#b43d09" : completedNodes >= 2 ? "#6b4c3b" : "#c4b8a4", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: completedNodes >= 2 && submitState !== "submitting" ? "pointer" : "not-allowed", transition: "background .3s" }}>
             {submitState === "submitting" ? "Submitting..." : "Submit order \u2192"}
           </button>
         </div>
