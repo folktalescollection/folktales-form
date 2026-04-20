@@ -313,9 +313,8 @@ export default function FolktalesTree() {
   const marriageY = cplY + nodeH + 36;
   const chY = isCouple ? marriageY + 60 + 36 : cplY + genGap + nodeH;
 
-  // Spouse positions — wide enough that each spouse sits within its parent pair span
-  // S1 parents midpoint = (190+426)/2 = 308, S2 parents midpoint = (674+910)/2 = 792
-  const sp1X = 308, sp2X = 692;
+  // Spouse positions — each at the midpoint of its parent pair
+  const sp1X = 308, sp2X = 792;
   const cplNodeW = 120, cplNodeH = 56;
 
   // Parents
@@ -329,8 +328,8 @@ export default function FolktalesTree() {
   const chStartX = cx - ((childCount - 1) * chSpread) / 2;
   const svgH = (childCount > 0 ? chY + nodeH + 50 : (isCouple ? marriageY + 60 + 40 : cplY + cplNodeH + 50));
 
-  // Couple center for vertical connector
-  const coupleCenterX = (sp1X + sp2X) / 2;
+  // Couple center for vertical connectors (true center of SVG)
+  const coupleCenterX = cx;
 
   if (submitState === "success") {
     return (
@@ -359,7 +358,7 @@ export default function FolktalesTree() {
         </div>
       )}
 
-      {/* Header */}
+      {/* Header with progress + submit */}
       <div style={{ maxWidth: 1120, margin: "0 auto", padding: "20px 28px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <img src="/Logo-HighRes.png" alt="Folktales Collection" style={{ width: 52, height: 52, borderRadius: "50%", display: "block" }} />
@@ -367,6 +366,34 @@ export default function FolktalesTree() {
             <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 22, fontWeight: 700, color: "#3d2e1e", margin: 0 }}>Folktales Collection</h1>
             <p style={{ fontSize: 11, color: "#9a8468", margin: 0, fontStyle: "italic", fontFamily: "'Playfair Display',serif" }}>Artworks that tell your family story</p>
           </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: "#5a3e28", fontFamily: "'Playfair Display',serif", lineHeight: 1 }}>{completedNodes}/{totalNodes}</div>
+            <div style={{ fontSize: 9, color: "#9a8468", letterSpacing: "1px", textTransform: "uppercase", marginTop: 2 }}>completed</div>
+          </div>
+          <button onClick={handleSubmit} disabled={completedNodes < 2 || submitState === "submitting"}
+            style={{ padding: "10px 22px", borderRadius: 8, border: "none", background: completedNodes >= 2 && submitState !== "submitting" ? "#6b4c3b" : "#c4b8a4", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: completedNodes >= 2 && submitState !== "submitting" ? "pointer" : "not-allowed", transition: "background .2s" }}>
+            {submitState === "submitting" ? "Submitting..." : "Submit order \u2192"}
+          </button>
+        </div>
+      </div>
+
+      {/* Customer fields — top, before steps */}
+      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "16px 28px 0" }}>
+        <div style={{ padding: "14px 16px 10px", border: "1px solid #e0d5c4", borderRadius: 12, background: "rgba(255,253,249,0.85)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+            <Field label="Email address" value={data.customer.email} onChange={v => setData(p => ({ ...p, customer: { ...p.customer, email: v } }))} placeholder="your@email.com" type="email" />
+            <div>
+              <Field label="Etsy order number (if applicable)" value={data.customer.orderNumber} onChange={v => setData(p => ({ ...p, customer: { ...p.customer, orderNumber: v } }))} placeholder="e.g. #1234567890" />
+              <p style={{ fontSize: 10.5, color: "#b8a890", margin: "-6px 0 4px", fontStyle: "italic" }}>Find this in your Etsy order confirmation email</p>
+            </div>
+          </div>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 12.5, color: "#6b5a48", userSelect: "none" }}>
+            <input type="checkbox" checked={data.customer.mailingList} onChange={e => setData(p => ({ ...p, customer: { ...p.customer, mailingList: e.target.checked } }))}
+              style={{ width: 16, height: 16, accentColor: "#6b4c3b", cursor: "pointer" }} />
+            Keep me updated on new collections, designs, and sales
+          </label>
         </div>
       </div>
 
@@ -488,38 +515,6 @@ export default function FolktalesTree() {
         )}
       </div>
 
-      {/* Bottom section: customer details + progress + submit */}
-      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 28px 40px" }}>
-        {/* Customer fields */}
-        <div style={{ padding: "16px", border: "1px solid #e0d5c4", borderRadius: 12, background: "rgba(255,253,249,0.85)", marginBottom: 16 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
-            <Field label="Email address" value={data.customer.email} onChange={v => setData(p => ({ ...p, customer: { ...p.customer, email: v } }))} placeholder="your@email.com" type="email" />
-            <div>
-              <Field label="Etsy order number (if applicable)" value={data.customer.orderNumber} onChange={v => setData(p => ({ ...p, customer: { ...p.customer, orderNumber: v } }))} placeholder="e.g. #1234567890" />
-              <p style={{ fontSize: 10.5, color: "#b8a890", margin: "-6px 0 4px", fontStyle: "italic" }}>Find this in your Etsy order confirmation email</p>
-            </div>
-          </div>
-          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 12.5, color: "#6b5a48", userSelect: "none" }}>
-            <input type="checkbox" checked={data.customer.mailingList} onChange={e => setData(p => ({ ...p, customer: { ...p.customer, mailingList: e.target.checked } }))}
-              style={{ width: 16, height: 16, accentColor: "#6b4c3b", cursor: "pointer" }} />
-            Keep me updated on new collections, designs, and sales
-          </label>
-        </div>
-
-        {/* Progress + submit row */}
-        <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 14 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", background: "rgba(255,255,255,0.7)", borderRadius: 10, border: "1px solid #e8e2da" }}>
-            <div style={{ width: 100, height: 4, background: "#ece4d6", borderRadius: 2, overflow: "hidden" }}>
-              <div style={{ width: `${totalNodes > 0 ? (completedNodes / totalNodes) * 100 : 0}%`, height: "100%", background: "linear-gradient(90deg,#6b4c3b,#c4a882)", borderRadius: 2, transition: "width .4s ease" }} />
-            </div>
-            <span style={{ fontSize: 11, color: "#9a8468" }}>{completedNodes}/{totalNodes}</span>
-          </div>
-          <button onClick={handleSubmit} disabled={completedNodes < 2 || submitState === "submitting"}
-            style={{ padding: "12px 28px", borderRadius: 10, border: "none", background: completedNodes >= 2 && submitState !== "submitting" ? "#6b4c3b" : "#c4b8a4", color: "#fff", fontSize: 14, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: completedNodes >= 2 && submitState !== "submitting" ? "pointer" : "not-allowed", transition: "background .2s" }}>
-            {submitState === "submitting" ? "Submitting..." : "Submit order \u2192"}
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
