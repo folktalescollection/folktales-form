@@ -5,7 +5,6 @@ const emptyMarriage = () => ({ date: "", location: "", dedication: "" });
 const emptyCustomer = () => ({ email: "", orderNumber: "", mailingList: false });
 const has = (p) => !!(p.name || p.dates || p.birthplace);
 const done = (p) => !!p.name;
-const hasMar = (m) => !!(m.date || m.location || m.dedication);
 const doneMar = (m) => !!(m.date);
 
 const INIT = {
@@ -23,17 +22,14 @@ const INIT = {
 
 const COUPLE_IDS = ["spouse1", "spouse2"];
 const PARENT_IDS = ["s1_father", "s1_mother", "s2_father", "s2_mother"];
-const GP_IDS = [
-  "s1_gf_father", "s1_gf_mother", "s1_gm_father", "s1_gm_mother",
-  "s2_gf_father", "s2_gf_mother", "s2_gm_father", "s2_gm_mother",
-];
+const GP_IDS = ["s1_gf_father", "s1_gf_mother", "s1_gm_father", "s1_gm_mother", "s2_gf_father", "s2_gf_mother", "s2_gm_father", "s2_gm_mother"];
 
 function Field({ label, value, onChange, placeholder, type = "text", autoFocus = false }) {
   return (
     <div style={{ marginBottom: 10 }}>
       <label style={{ display: "block", fontSize: 10, fontWeight: 600, color: "#9a8468", letterSpacing: "1.2px", textTransform: "uppercase", marginBottom: 4 }}>{label}</label>
       <input autoFocus={autoFocus} type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        style={{ width: "100%", padding: "8px 11px", fontSize: 13.5, fontFamily: "'DM Sans',sans-serif", color: "#3d2e1e", border: "1px solid #e0d5c4", borderRadius: 8, background: "#faf7f2", outline: "none", boxSizing: "border-box", transition: "border-color .2s" }}
+        style={{ width: "100%", padding: "8px 11px", fontSize: 13.5, fontFamily: "'DM Sans',sans-serif", color: "#3d2e1e", border: "1px solid #e0d5c4", borderRadius: 8, background: "#faf7f2", outline: "none", boxSizing: "border-box" }}
         onFocus={e => e.target.style.borderColor = "#b8a080"} onBlur={e => e.target.style.borderColor = "#e0d5c4"} />
     </div>
   );
@@ -43,7 +39,6 @@ function PersonPopup({ person, label, onSave, anchorRect, containerRect }) {
   const [draft, setDraft] = useState({ ...person });
   const popRef = useRef(null);
   const [pos, setPos] = useState({ top: 0, left: 0 });
-
   useEffect(() => {
     if (!anchorRect || !containerRect || !popRef.current) return;
     const popW = 300, popH = popRef.current.offsetHeight || 220;
@@ -54,27 +49,18 @@ function PersonPopup({ person, label, onSave, anchorRect, containerRect }) {
     if (top + popH > containerRect.height - 8) top = anchorRect.top - containerRect.top - popH - 12;
     setPos({ top, left });
   }, [anchorRect, containerRect]);
-
   useEffect(() => {
     const h = (e) => { if (popRef.current && !popRef.current.contains(e.target)) onSave(draft); };
     const t = setTimeout(() => document.addEventListener("mousedown", h), 50);
     return () => { clearTimeout(t); document.removeEventListener("mousedown", h); };
   }, [draft, onSave]);
-
   useEffect(() => {
     const h = (e) => { if (e.key === "Escape") onSave(draft); };
     document.addEventListener("keydown", h);
     return () => document.removeEventListener("keydown", h);
   }, [draft, onSave]);
-
   return (
-    <div ref={popRef} style={{
-      position: "absolute", top: pos.top, left: pos.left, width: 300, zIndex: 100,
-      background: "#fffdf9", border: "1px solid #d4c4ac", borderRadius: 14,
-      boxShadow: "0 12px 48px rgba(80,60,30,.18), 0 2px 8px rgba(80,60,30,.08)",
-      padding: "20px 18px 16px", fontFamily: "'DM Sans',sans-serif",
-      animation: "popIn .2s ease-out",
-    }}>
+    <div ref={popRef} style={{ position: "absolute", top: pos.top, left: pos.left, width: 300, zIndex: 100, background: "#fffdf9", border: "1px solid #d4c4ac", borderRadius: 14, boxShadow: "0 12px 48px rgba(80,60,30,.18), 0 2px 8px rgba(80,60,30,.08)", padding: "20px 18px 16px", fontFamily: "'DM Sans',sans-serif", animation: "popIn .2s ease-out" }}>
       <style>{`@keyframes popIn{from{opacity:0;transform:translateY(-6px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}`}</style>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
         <span style={{ fontFamily: "'Playfair Display',serif", fontSize: 15, fontWeight: 700, color: "#5a3e28" }}>{label}</span>
@@ -88,7 +74,7 @@ function PersonPopup({ person, label, onSave, anchorRect, containerRect }) {
           style={{ width: "100%", padding: "8px 11px", fontSize: 13.5, fontFamily: "'DM Sans',sans-serif", color: "#3d2e1e", border: "1px solid #e0d5c4", borderRadius: 8, background: "#faf7f2", outline: "none", boxSizing: "border-box" }}
           onFocus={e => e.target.style.borderColor = "#b8a080"} onBlur={e => e.target.style.borderColor = "#e0d5c4"} />
       </div>
-      <button onClick={() => onSave(draft)} style={{ width: "100%", marginTop: 14, padding: "9px 0", background: "#6b4c3b", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: "pointer", transition: "background .2s" }}
+      <button onClick={() => onSave(draft)} style={{ width: "100%", marginTop: 14, padding: "9px 0", background: "#6b4c3b", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: "pointer" }}
         onMouseEnter={e => e.currentTarget.style.background = "#56392a"} onMouseLeave={e => e.currentTarget.style.background = "#6b4c3b"}>Done</button>
     </div>
   );
@@ -98,7 +84,6 @@ function MarriagePopup({ marriage, onSave, anchorRect, containerRect }) {
   const [draft, setDraft] = useState({ ...marriage });
   const popRef = useRef(null);
   const [pos, setPos] = useState({ top: 0, left: 0 });
-
   useEffect(() => {
     if (!anchorRect || !containerRect || !popRef.current) return;
     const popW = 320, popH = popRef.current.offsetHeight || 280;
@@ -109,27 +94,18 @@ function MarriagePopup({ marriage, onSave, anchorRect, containerRect }) {
     if (top + popH > containerRect.height - 8) top = anchorRect.top - containerRect.top - popH - 12;
     setPos({ top, left });
   }, [anchorRect, containerRect]);
-
   useEffect(() => {
     const h = (e) => { if (popRef.current && !popRef.current.contains(e.target)) onSave(draft); };
     const t = setTimeout(() => document.addEventListener("mousedown", h), 50);
     return () => { clearTimeout(t); document.removeEventListener("mousedown", h); };
   }, [draft, onSave]);
-
   useEffect(() => {
     const h = (e) => { if (e.key === "Escape") onSave(draft); };
     document.addEventListener("keydown", h);
     return () => document.removeEventListener("keydown", h);
   }, [draft, onSave]);
-
   return (
-    <div ref={popRef} style={{
-      position: "absolute", top: pos.top, left: pos.left, width: 320, zIndex: 100,
-      background: "#fffdf9", border: "1px solid #d4c4ac", borderRadius: 14,
-      boxShadow: "0 12px 48px rgba(80,60,30,.18), 0 2px 8px rgba(80,60,30,.08)",
-      padding: "20px 18px 16px", fontFamily: "'DM Sans',sans-serif",
-      animation: "popIn .2s ease-out",
-    }}>
+    <div ref={popRef} style={{ position: "absolute", top: pos.top, left: pos.left, width: 320, zIndex: 100, background: "#fffdf9", border: "1px solid #d4c4ac", borderRadius: 14, boxShadow: "0 12px 48px rgba(80,60,30,.18), 0 2px 8px rgba(80,60,30,.08)", padding: "20px 18px 16px", fontFamily: "'DM Sans',sans-serif", animation: "popIn .2s ease-out" }}>
       <style>{`@keyframes popIn{from{opacity:0;transform:translateY(-6px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}`}</style>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
         <span style={{ fontFamily: "'Playfair Display',serif", fontSize: 15, fontWeight: 700, color: "#5a3e28" }}>Marriage details</span>
@@ -144,13 +120,13 @@ function MarriagePopup({ marriage, onSave, anchorRect, containerRect }) {
           style={{ width: "100%", padding: "8px 11px", fontSize: 13, fontFamily: "'DM Sans',sans-serif", color: "#3d2e1e", border: "1px solid #e0d5c4", borderRadius: 8, background: "#faf7f2", outline: "none", boxSizing: "border-box", resize: "vertical", lineHeight: 1.5 }}
           onFocus={e => e.target.style.borderColor = "#b8a080"} onBlur={e => e.target.style.borderColor = "#e0d5c4"} />
       </div>
-      <button onClick={() => onSave(draft)} style={{ width: "100%", marginTop: 14, padding: "9px 0", background: "#6b4c3b", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: "pointer", transition: "background .2s" }}
+      <button onClick={() => onSave(draft)} style={{ width: "100%", marginTop: 14, padding: "9px 0", background: "#6b4c3b", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: "pointer" }}
         onMouseEnter={e => e.currentTarget.style.background = "#56392a"} onMouseLeave={e => e.currentTarget.style.background = "#6b4c3b"}>Done</button>
     </div>
   );
 }
 
-function TreeNode({ id, label, person, onClick, x, y, w = 110, h = 52 }) {
+function TreeNode({ id, label, person, onClick, x, y, w = 98, h = 52 }) {
   const completed = done(person);
   const nodeRef = useRef(null);
   return (
@@ -182,21 +158,14 @@ function MarriageNode({ marriage, onClick, x, y }) {
   const w = 170, h = 60, rx = 30;
   const preview = completed ? marriage.date + (marriage.location ? ` \u00b7 ${marriage.location}` : "") : null;
   const trimmed = preview && preview.length > 26 ? preview.slice(0, 25) + "\u2026" : preview;
-
   return (
     <g ref={nodeRef} style={{ cursor: "pointer" }} onClick={() => { onClick("marriage", nodeRef.current?.getBoundingClientRect()); }}>
       <ellipse cx={x} cy={y + h / 2} rx={w / 2 + 6} ry={h / 2 + 6} fill="#c4a88220" />
       <rect x={x - w / 2 + 2} y={y + 2} width={w} height={h} rx={rx} fill="#00000006" />
-      <rect x={x - w / 2} y={y} width={w} height={h} rx={rx}
-        fill={completed ? "#fdf8ee" : "#fff"} stroke={completed ? "#c4a87c" : "#ddd5c6"} strokeWidth={completed ? 1.5 : 1} />
+      <rect x={x - w / 2} y={y} width={w} height={h} rx={rx} fill={completed ? "#fdf8ee" : "#fff"} stroke={completed ? "#c4a87c" : "#ddd5c6"} strokeWidth={completed ? 1.5 : 1} />
       <circle cx={x - w / 2 + 24} cy={y + h / 2} r={10} fill="none" stroke={completed ? "#c4a87c" : "#ddd5c6"} strokeWidth="1" />
       <circle cx={x - w / 2 + 24} cy={y + h / 2} r={6} fill="none" stroke={completed ? "#c4a87c" : "#ddd5c6"} strokeWidth="0.7" />
-      {completed && (
-        <g>
-          <circle cx={x + w / 2 - 10} cy={y + 10} r={9} fill="#6b4c3b" />
-          <path d={`M${x + w / 2 - 14} ${y + 10} l3 3 5-5`} fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        </g>
-      )}
+      {completed && (<g><circle cx={x + w / 2 - 10} cy={y + 10} r={9} fill="#6b4c3b" /><path d={`M${x + w / 2 - 14} ${y + 10} l3 3 5-5`} fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></g>)}
       <text x={x + 6} y={completed ? y + h / 2 - 7 : y + h / 2 - 3} textAnchor="middle" dominantBaseline="central" fontSize={11.5} fontWeight="600" fill="#5a3e28" fontFamily="'Playfair Display',serif">Marriage</text>
       {completed ? (
         <text x={x + 6} y={y + h / 2 + 8} textAnchor="middle" dominantBaseline="central" fontSize={8.5} fill="#9a8468" fontFamily="'DM Sans',sans-serif">{trimmed}</text>
@@ -216,15 +185,24 @@ function HBranch({ parentX, parentY, childXs, childY }) {
   return <>{paths}</>;
 }
 
-function EditionToggle({ edition, onChange }) {
-  const opts = [
-    { key: "child", label: "Child edition", icon: "\ud83c\udf33" },
-    { key: "couple", label: "Couple / family edition", icon: "\ud83d\udc8d" },
-  ];
+/* Draws branch from a bottom node UP to multiple top nodes, with horizontal bar extending to bottom node */
+function BranchUp({ bottomX, bottomY, topXs, topY }) {
+  const midY = topY + (bottomY - topY) * 0.5;
+  const allXs = [...topXs, bottomX];
+  const minX = Math.min(...allXs);
+  const maxX = Math.max(...allXs);
+  const paths = [];
+  paths.push(<line key="bv" x1={bottomX} y1={bottomY} x2={bottomX} y2={midY} stroke="#d4c4ac" strokeWidth="1.2" />);
+  paths.push(<line key="hb" x1={minX} y1={midY} x2={maxX} y2={midY} stroke="#d4c4ac" strokeWidth="1.2" />);
+  topXs.forEach((tx, i) => paths.push(<line key={`tv${i}`} x1={tx} y1={topY} x2={tx} y2={midY} stroke="#d4c4ac" strokeWidth="1.2" />));
+  return <>{paths}</>;
+}
+
+function Toggle({ options, value, onChange }) {
   return (
     <div style={{ display: "inline-flex", background: "#f0ebe2", borderRadius: 10, padding: 3 }}>
-      {opts.map(o => {
-        const active = edition === o.key;
+      {options.map(o => {
+        const active = value === o.key;
         return (
           <button key={o.key} onClick={() => onChange(o.key)} style={{
             padding: "7px 16px", borderRadius: 8, border: "none",
@@ -235,75 +213,10 @@ function EditionToggle({ edition, onChange }) {
             fontFamily: "'DM Sans',sans-serif", cursor: "pointer",
             transition: "all .2s", display: "flex", alignItems: "center", gap: 5,
           }}>
-            <span style={{ fontSize: 13 }}>{o.icon}</span> {o.label}
+            {o.icon && <span style={{ fontSize: 13 }}>{o.icon}</span>} {o.label}
           </button>
         );
       })}
-    </div>
-  );
-}
-
-/* Generation selector — simple "how many generations" chooser */
-function GenSelector({ genCount, onChange }) {
-  const options = [
-    { value: 2, label: "2 generations", desc: "Couple + parents" },
-    { value: 3, label: "3 generations", desc: "Couple + parents + grandparents" },
-  ];
-  return (
-    <div style={{ display: "inline-flex", background: "#f0ebe2", borderRadius: 10, padding: 3 }}>
-      {options.map(o => {
-        const active = genCount === o.value;
-        return (
-          <button key={o.value} onClick={() => onChange(o.value)} style={{
-            padding: "7px 16px", borderRadius: 8, border: "none",
-            background: active ? "#fff" : "transparent",
-            boxShadow: active ? "0 1px 4px rgba(80,60,30,.12)" : "none",
-            color: active ? "#3d2e1e" : "#9a8468",
-            fontSize: 12, fontWeight: active ? 600 : 400,
-            fontFamily: "'DM Sans',sans-serif", cursor: "pointer",
-            transition: "all .2s",
-          }}>
-            {o.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function CustomerInfoPanel({ customer, onChange }) {
-  const [expanded, setExpanded] = useState(true);
-  return (
-    <div style={{ maxWidth: 940, margin: "0 auto", padding: "0 28px" }}>
-      <button onClick={() => setExpanded(!expanded)} style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        width: "100%", padding: "10px 16px", borderRadius: 10,
-        border: "1px solid #e0d5c4", background: "#fffdf9", cursor: "pointer",
-        fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#5a3e28", fontWeight: 500,
-      }}>
-        <span>Your details {customer.email ? `\u2014 ${customer.email}` : ""}</span>
-        <span style={{ fontSize: 11, color: "#9a8468" }}>{expanded ? "hide" : "show"}</span>
-      </button>
-      {expanded && (
-        <div style={{
-          padding: "16px 16px 12px", marginTop: -1,
-          border: "1px solid #e0d5c4", borderTop: "none",
-          borderRadius: "0 0 10px 10px", background: "#fffdf9",
-        }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
-            <Field label="Email address" value={customer.email} onChange={v => onChange({ ...customer, email: v })} placeholder="your@email.com" type="email" />
-            <div>
-              <Field label="Etsy order number (if applicable)" value={customer.orderNumber} onChange={v => onChange({ ...customer, orderNumber: v })} placeholder="e.g. #1234567890" />
-              <p style={{ fontSize: 10.5, color: "#b8a890", margin: "-6px 0 8px", fontStyle: "italic" }}>Find this in your Etsy order confirmation email</p>
-            </div>
-          </div>
-          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 12.5, color: "#6b5a48", userSelect: "none" }}>
-            <input type="checkbox" checked={customer.mailingList} onChange={e => onChange({ ...customer, mailingList: e.target.checked })}
-              style={{ width: 16, height: 16, accentColor: "#6b4c3b", cursor: "pointer" }} />
-            Keep me updated on new collections, designs, and sales
-          </label>
-        </div>
-      )}
     </div>
   );
 }
@@ -311,20 +224,15 @@ function CustomerInfoPanel({ customer, onChange }) {
 export default function FolktalesTree() {
   const [data, setData] = useState(INIT);
   const [edition, setEdition] = useState("child");
-  const [genCount, setGenCount] = useState(3);
+  const [genCount, setGenCount] = useState(2);
   const [editing, setEditing] = useState(null);
-  const [submitState, setSubmitState] = useState("idle"); // idle | submitting | success | error
+  const [submitState, setSubmitState] = useState("idle");
   const containerRef = useRef(null);
   const isCouple = edition === "couple";
   const showGP = genCount === 3;
 
-  // Warn before leaving page (but not after successful submit)
   useEffect(() => {
-    const handler = (e) => {
-      if (submitState === "success") return;
-      e.preventDefault();
-      e.returnValue = "";
-    };
+    const handler = (e) => { if (submitState === "success") return; e.preventDefault(); e.returnValue = ""; };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [submitState]);
@@ -332,132 +240,72 @@ export default function FolktalesTree() {
   const handleSubmit = async () => {
     setSubmitState("submitting");
     try {
-      // Flatten all data into a single object for NocoDB
       const payload = {
-        Edition: edition === "couple" ? "Couple / Family Edition" : "Child Edition",
+        Edition: isCouple ? "Couple / Family Edition" : "Child Edition",
         Generations: genCount,
         Email: data.customer.email,
         EtsyOrderNumber: data.customer.orderNumber,
         MailingListOptIn: data.customer.mailingList,
-        Spouse1_Name: data.spouse1.name,
-        Spouse1_Dates: data.spouse1.dates,
-        Spouse1_Birthplace: data.spouse1.birthplace,
-        Spouse2_Name: data.spouse2.name,
-        Spouse2_Dates: data.spouse2.dates,
-        Spouse2_Birthplace: data.spouse2.birthplace,
-        Marriage_Date: data.marriage.date,
-        Marriage_Location: data.marriage.location,
-        Marriage_Dedication: data.marriage.dedication,
-        S1_Parent1_Name: data.s1_father.name,
-        S1_Parent1_Dates: data.s1_father.dates,
-        S1_Parent1_Birthplace: data.s1_father.birthplace,
-        S1_Parent2_Name: data.s1_mother.name,
-        S1_Parent2_Dates: data.s1_mother.dates,
-        S1_Parent2_Birthplace: data.s1_mother.birthplace,
-        S2_Parent1_Name: data.s2_father.name,
-        S2_Parent1_Dates: data.s2_father.dates,
-        S2_Parent1_Birthplace: data.s2_father.birthplace,
-        S2_Parent2_Name: data.s2_mother.name,
-        S2_Parent2_Dates: data.s2_mother.dates,
-        S2_Parent2_Birthplace: data.s2_mother.birthplace,
-        S1_GP1_Name: data.s1_gf_father.name,
-        S1_GP1_Dates: data.s1_gf_father.dates,
-        S1_GP1_Birthplace: data.s1_gf_father.birthplace,
-        S1_GP2_Name: data.s1_gf_mother.name,
-        S1_GP2_Dates: data.s1_gf_mother.dates,
-        S1_GP2_Birthplace: data.s1_gf_mother.birthplace,
-        S1_GP3_Name: data.s1_gm_father.name,
-        S1_GP3_Dates: data.s1_gm_father.dates,
-        S1_GP3_Birthplace: data.s1_gm_father.birthplace,
-        S1_GP4_Name: data.s1_gm_mother.name,
-        S1_GP4_Dates: data.s1_gm_mother.dates,
-        S1_GP4_Birthplace: data.s1_gm_mother.birthplace,
-        S2_GP1_Name: data.s2_gf_father.name,
-        S2_GP1_Dates: data.s2_gf_father.dates,
-        S2_GP1_Birthplace: data.s2_gf_father.birthplace,
-        S2_GP2_Name: data.s2_gf_mother.name,
-        S2_GP2_Dates: data.s2_gf_mother.dates,
-        S2_GP2_Birthplace: data.s2_gf_mother.birthplace,
-        S2_GP3_Name: data.s2_gm_father.name,
-        S2_GP3_Dates: data.s2_gm_father.dates,
-        S2_GP3_Birthplace: data.s2_gm_father.birthplace,
-        S2_GP4_Name: data.s2_gm_mother.name,
-        S2_GP4_Dates: data.s2_gm_mother.dates,
-        S2_GP4_Birthplace: data.s2_gm_mother.birthplace,
-        Child1_Name: data.children[0]?.name || "",
-        Child1_Dates: data.children[0]?.dates || "",
-        Child1_Birthplace: data.children[0]?.birthplace || "",
-        Child2_Name: data.children[1]?.name || "",
-        Child2_Dates: data.children[1]?.dates || "",
-        Child2_Birthplace: data.children[1]?.birthplace || "",
-        Child3_Name: data.children[2]?.name || "",
-        Child3_Dates: data.children[2]?.dates || "",
-        Child3_Birthplace: data.children[2]?.birthplace || "",
-        Child4_Name: data.children[3]?.name || "",
-        Child4_Dates: data.children[3]?.dates || "",
-        Child4_Birthplace: data.children[3]?.birthplace || "",
-        Child5_Name: data.children[4]?.name || "",
-        Child5_Dates: data.children[4]?.dates || "",
-        Child5_Birthplace: data.children[4]?.birthplace || "",
+        Spouse1_Name: data.spouse1.name, Spouse1_Dates: data.spouse1.dates, Spouse1_Birthplace: data.spouse1.birthplace,
+        Spouse2_Name: data.spouse2.name, Spouse2_Dates: data.spouse2.dates, Spouse2_Birthplace: data.spouse2.birthplace,
+        Marriage_Date: data.marriage.date, Marriage_Location: data.marriage.location, Marriage_Dedication: data.marriage.dedication,
+        S1_Parent1_Name: data.s1_father.name, S1_Parent1_Dates: data.s1_father.dates, S1_Parent1_Birthplace: data.s1_father.birthplace,
+        S1_Parent2_Name: data.s1_mother.name, S1_Parent2_Dates: data.s1_mother.dates, S1_Parent2_Birthplace: data.s1_mother.birthplace,
+        S2_Parent1_Name: data.s2_father.name, S2_Parent1_Dates: data.s2_father.dates, S2_Parent1_Birthplace: data.s2_father.birthplace,
+        S2_Parent2_Name: data.s2_mother.name, S2_Parent2_Dates: data.s2_mother.dates, S2_Parent2_Birthplace: data.s2_mother.birthplace,
+        S1_GP1_Name: data.s1_gf_father.name, S1_GP1_Dates: data.s1_gf_father.dates, S1_GP1_Birthplace: data.s1_gf_father.birthplace,
+        S1_GP2_Name: data.s1_gf_mother.name, S1_GP2_Dates: data.s1_gf_mother.dates, S1_GP2_Birthplace: data.s1_gf_mother.birthplace,
+        S1_GP3_Name: data.s1_gm_father.name, S1_GP3_Dates: data.s1_gm_father.dates, S1_GP3_Birthplace: data.s1_gm_father.birthplace,
+        S1_GP4_Name: data.s1_gm_mother.name, S1_GP4_Dates: data.s1_gm_mother.dates, S1_GP4_Birthplace: data.s1_gm_mother.birthplace,
+        S2_GP1_Name: data.s2_gf_father.name, S2_GP1_Dates: data.s2_gf_father.dates, S2_GP1_Birthplace: data.s2_gf_father.birthplace,
+        S2_GP2_Name: data.s2_gf_mother.name, S2_GP2_Dates: data.s2_gf_mother.dates, S2_GP2_Birthplace: data.s2_gf_mother.birthplace,
+        S2_GP3_Name: data.s2_gm_father.name, S2_GP3_Dates: data.s2_gm_father.dates, S2_GP3_Birthplace: data.s2_gm_father.birthplace,
+        S2_GP4_Name: data.s2_gm_mother.name, S2_GP4_Dates: data.s2_gm_mother.dates, S2_GP4_Birthplace: data.s2_gm_mother.birthplace,
+        Child1_Name: data.children[0]?.name || "", Child1_Dates: data.children[0]?.dates || "", Child1_Birthplace: data.children[0]?.birthplace || "",
+        Child2_Name: data.children[1]?.name || "", Child2_Dates: data.children[1]?.dates || "", Child2_Birthplace: data.children[1]?.birthplace || "",
+        Child3_Name: data.children[2]?.name || "", Child3_Dates: data.children[2]?.dates || "", Child3_Birthplace: data.children[2]?.birthplace || "",
+        Child4_Name: data.children[3]?.name || "", Child4_Dates: data.children[3]?.dates || "", Child4_Birthplace: data.children[3]?.birthplace || "",
+        Child5_Name: data.children[4]?.name || "", Child5_Dates: data.children[4]?.dates || "", Child5_Birthplace: data.children[4]?.birthplace || "",
       };
-
       const response = await fetch("https://folktales-form-proxy.twilight-violet-b3b0.workers.dev/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
       });
-
       if (!response.ok) throw new Error(`Server responded ${response.status}`);
       setSubmitState("success");
-    } catch (err) {
-      console.error("Submit error:", err);
-      setSubmitState("error");
-    }
+    } catch (err) { console.error("Submit error:", err); setSubmitState("error"); }
   };
 
   const handleNodeClick = useCallback((id, rect) => { setEditing({ id, rect }); }, []);
-
   const handleSavePerson = useCallback((id, draft) => {
     setData(prev => {
-      if (id.startsWith("child_")) {
-        const idx = parseInt(id.split("_")[1]);
-        const ch = [...prev.children]; ch[idx] = draft;
-        return { ...prev, children: ch };
-      }
+      if (id.startsWith("child_")) { const idx = parseInt(id.split("_")[1]); const ch = [...prev.children]; ch[idx] = draft; return { ...prev, children: ch }; }
       return { ...prev, [id]: draft };
     });
     setEditing(null);
   }, []);
+  const handleSaveMarriage = useCallback((draft) => { setData(prev => ({ ...prev, marriage: draft })); setEditing(null); }, []);
 
-  const handleSaveMarriage = useCallback((draft) => {
-    setData(prev => ({ ...prev, marriage: draft }));
-    setEditing(null);
-  }, []);
+  // Child edition: exactly 1 child, no add/remove. Couple edition: add/remove children
+  const addChild = () => { if (isCouple && data.children.length < 10) setData(p => ({ ...p, children: [...p.children, ep()] })); };
+  const removeChild = () => { if (isCouple && data.children.length > 0) setData(p => ({ ...p, children: p.children.slice(0, -1) })); };
 
-  const addChild = () => { if (data.children.length < 10) setData(p => ({ ...p, children: [...p.children, ep()] })); };
-  const removeChild = () => { if (data.children.length > 0) setData(p => ({ ...p, children: p.children.slice(0, -1) })); };
-
-  const getPerson = (id) => {
-    if (id.startsWith("child_")) return data.children[parseInt(id.split("_")[1])];
-    return data[id];
-  };
+  const getPerson = (id) => { if (id.startsWith("child_")) return data.children[parseInt(id.split("_")[1])]; return data[id]; };
   const getLabel = (id) => {
     const map = { spouse1: "Spouse", spouse2: "Spouse", s1_father: "Parent", s1_mother: "Parent", s2_father: "Parent", s2_mother: "Parent", s1_gf_father: "Grandparent", s1_gf_mother: "Grandparent", s1_gm_father: "Grandparent", s1_gm_mother: "Grandparent", s2_gf_father: "Grandparent", s2_gf_mother: "Grandparent", s2_gm_father: "Grandparent", s2_gm_mother: "Grandparent" };
     if (id.startsWith("child_")) return "Child";
     return map[id] || id;
   };
 
-  const activeAncestorIds = [...COUPLE_IDS, ...PARENT_IDS, ...(showGP ? GP_IDS : [])];
-  const totalNodes = activeAncestorIds.length + data.children.length + (isCouple ? 1 : 0);
-  const completedNodes = activeAncestorIds.filter(id => done(data[id])).length
-    + data.children.filter(c => done(c)).length
-    + (isCouple && doneMar(data.marriage) ? 1 : 0);
+  const childCount = edition === "child" ? 1 : data.children.length;
+  const activeIds = [...COUPLE_IDS, ...PARENT_IDS, ...(showGP ? GP_IDS : [])];
+  const totalNodes = activeIds.length + childCount + (isCouple ? 1 : 0);
+  const completedNodes = activeIds.filter(id => done(data[id])).length + data.children.slice(0, childCount).filter(c => done(c)).length + (isCouple && doneMar(data.marriage) ? 1 : 0);
 
-  // SVG Layout — positions computed to prevent overlap
+  // Layout
   const svgW = 1100;
   const nodeW = 98, nodeH = 52;
   const genGap = 90;
-  const centerX = svgW / 2;
+  const cx = svgW / 2;
 
   const gpY = 40;
   const pY = showGP ? gpY + genGap + nodeH : 40;
@@ -465,55 +313,48 @@ export default function FolktalesTree() {
   const marriageY = cplY + nodeH + 36;
   const chY = isCouple ? marriageY + 60 + 36 : cplY + genGap + nodeH;
 
-  // Couple — tight in center
-  const sp1X = centerX - 80, sp2X = centerX + 80;
+  // Spouse positions — wide enough that each spouse sits within its parent pair span
+  // S1 parents midpoint = (190+426)/2 = 308, S2 parents midpoint = (674+910)/2 = 792
+  const sp1X = 308, sp2X = 692;
+  const cplNodeW = 120, cplNodeH = 56;
 
-  // Parents — positioned at GP pair midpoints so branches connect cleanly
-  const s1fX = 190, s1mX = 426;
-  const s2fX = 674, s2mX = 910;
+  // Parents
+  const s1fX = 190, s1mX = 426, s2fX = 674, s2mX = 910;
 
-  // Grandparents — evenly spaced, no overlaps (16px within pair, 24px between pairs, 36px center gap)
-  const s1gf_fX = 133, s1gf_mX = 247;
-  const s1gm_fX = 369, s1gm_mX = 483;
-  const s2gf_fX = 617, s2gf_mX = 731;
-  const s2gm_fX = 853, s2gm_mX = 967;
+  // Grandparents
+  const s1gf_fX = 133, s1gf_mX = 247, s1gm_fX = 369, s1gm_mX = 483;
+  const s2gf_fX = 617, s2gf_mX = 731, s2gm_fX = 853, s2gm_mX = 967;
 
-  const chCount = data.children.length;
-  const chSpread = Math.min(120, (svgW - 140) / Math.max(chCount, 1));
-  const chStartX = centerX - ((chCount - 1) * chSpread) / 2;
-  const svgH = (chCount > 0 ? chY + nodeH + 50 : (isCouple ? marriageY + 60 + 40 : cplY + nodeH + 50));
+  const chSpread = Math.min(120, (svgW - 140) / Math.max(childCount, 1));
+  const chStartX = cx - ((childCount - 1) * chSpread) / 2;
+  const svgH = (childCount > 0 ? chY + nodeH + 50 : (isCouple ? marriageY + 60 + 40 : cplY + cplNodeH + 50));
 
-  // Success screen
+  // Couple center for vertical connector
+  const coupleCenterX = (sp1X + sp2X) / 2;
+
   if (submitState === "success") {
     return (
-      <div style={{ minHeight: "100vh", background: "linear-gradient(180deg, #f5f0e6 0%, #faf7f1 40%, #fefcf8 100%)", fontFamily: "'DM Sans',sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ minHeight: "100vh", background: "#f5f0e6 url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22300%22 height=%22300%22 filter=%22url(%23n)%22 opacity=%220.06%22/%3E%3C/svg%3E')", fontFamily: "'DM Sans',sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
         <div style={{ textAlign: "center", padding: "60px 28px", maxWidth: 500 }}>
           <img src="/Logo-HighRes.png" alt="Folktales Collection" style={{ width: 88, height: 88, borderRadius: "50%", display: "block", margin: "0 auto 20px" }} />
           <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 28, fontWeight: 700, color: "#3d2e1e", margin: "0 0 12px" }}>Thank you!</h1>
-          <p style={{ fontSize: 15, color: "#6b5a48", lineHeight: 1.6, margin: "0 0 8px" }}>
-            Your family tree information has been submitted successfully.
-          </p>
-          <p style={{ fontSize: 13, color: "#9a8468", lineHeight: 1.6, margin: 0 }}>
-            We'll begin working on your custom artwork and will be in touch{data.customer.email ? ` at ${data.customer.email}` : ""} with updates.
-          </p>
+          <p style={{ fontSize: 15, color: "#6b5a48", lineHeight: 1.6, margin: "0 0 8px" }}>Your family tree information has been submitted successfully.</p>
+          <p style={{ fontSize: 13, color: "#9a8468", lineHeight: 1.6, margin: 0 }}>We'll begin working on your custom artwork and will be in touch{data.customer.email ? ` at ${data.customer.email}` : ""} with updates.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(180deg, #f5f0e6 0%, #faf7f1 40%, #fefcf8 100%)", fontFamily: "'DM Sans',sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#f5f0e6 url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22300%22 height=%22300%22 filter=%22url(%23n)%22 opacity=%220.06%22/%3E%3C/svg%3E')", fontFamily: "'DM Sans',sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-      {/* Error banner */}
       {submitState === "error" && (
         <div style={{ maxWidth: 1120, margin: "0 auto", padding: "12px 28px 0" }}>
           <div style={{ padding: "12px 16px", background: "#fef2f2", border: "1px solid #e8c4c4", borderRadius: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <p style={{ fontSize: 13, color: "#8b3a3a", margin: 0 }}>
-              Something went wrong submitting your form. Please try again, or contact us if the problem persists.
-            </p>
-            <button onClick={() => setSubmitState("idle")} style={{ background: "none", border: "none", fontSize: 18, color: "#8b3a3a", cursor: "pointer", padding: "0 4px" }}>{"\u00d7"}</button>
+            <p style={{ fontSize: 13, color: "#8b3a3a", margin: 0 }}>Something went wrong. Please try again.</p>
+            <button onClick={() => setSubmitState("idle")} style={{ background: "none", border: "none", fontSize: 18, color: "#8b3a3a", cursor: "pointer" }}>{"\u00d7"}</button>
           </div>
         </div>
       )}
@@ -527,45 +368,26 @@ export default function FolktalesTree() {
             <p style={{ fontSize: 11, color: "#9a8468", margin: 0, fontStyle: "italic", fontFamily: "'Playfair Display',serif" }}>Artworks that tell your family story</p>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 20, fontWeight: 700, color: "#5a3e28", fontFamily: "'Playfair Display',serif", lineHeight: 1 }}>{completedNodes}/{totalNodes}</div>
-            <div style={{ fontSize: 9, color: "#9a8468", letterSpacing: "1px", textTransform: "uppercase", marginTop: 2 }}>completed</div>
-          </div>
-          <button onClick={handleSubmit} disabled={completedNodes < 2 || submitState === "submitting"}
-            style={{ padding: "10px 22px", borderRadius: 8, border: "none", background: completedNodes >= 2 && submitState !== "submitting" ? "#6b4c3b" : "#c4b8a4", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: completedNodes >= 2 && submitState !== "submitting" ? "pointer" : "not-allowed", transition: "background .2s" }}>
-            {submitState === "submitting" ? "Submitting..." : "Submit order \u2192"}
-          </button>
-        </div>
       </div>
 
-      {/* Step 1: Generation selector */}
+      {/* Step 1 */}
       <div style={{ maxWidth: 1120, margin: "0 auto", padding: "18px 28px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
         <p style={{ fontSize: 12, fontWeight: 600, color: "#6b5a48", margin: 0, letterSpacing: "0.5px" }}>1. Select number of generations</p>
-        <GenSelector genCount={genCount} onChange={setGenCount} />
+        <Toggle options={[{ key: 2, label: "2 generations" }, { key: 3, label: "3 generations" }]} value={genCount} onChange={setGenCount} />
       </div>
 
-      {/* Step 2: Edition selector */}
+      {/* Step 2 */}
       <div style={{ maxWidth: 1120, margin: "0 auto", padding: "14px 28px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
         <p style={{ fontSize: 12, fontWeight: 600, color: "#6b5a48", margin: 0, letterSpacing: "0.5px" }}>2. Select edition</p>
-        <EditionToggle edition={edition} onChange={setEdition} />
+        <Toggle options={[{ key: "child", label: "Child edition", icon: "\ud83c\udf33" }, { key: "couple", label: "Couple / family edition", icon: "\ud83d\udc8d" }]} value={edition} onChange={setEdition} />
         <p style={{ fontSize: 12, color: "#9a8468", margin: 0, textAlign: "center" }}>
-          {isCouple
-            ? "Couple / family edition \u2014 celebrate the union with marriage details at the heart of your tree"
-            : "Child edition \u2014 the child's name anchors the tree trunk"}
+          {isCouple ? "Couple / family edition \u2014 celebrate the union with marriage details at the heart of your tree" : "Child edition \u2014 the child's name anchors the tree trunk"}
         </p>
       </div>
 
-      {/* Customer Info */}
-      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "14px 0 0" }}>
-        <CustomerInfoPanel customer={data.customer} onChange={c => setData(p => ({ ...p, customer: c }))} />
-      </div>
-
-      {/* Instructions + exit warning */}
-      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "12px 28px 0", textAlign: "center" }}>
-        <p style={{ fontSize: 12.5, color: "#9a8468", margin: "0 0 6px" }}>
-          Click any node to enter family member details.
-        </p>
+      {/* Step 3 */}
+      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "14px 28px 0", textAlign: "center" }}>
+        <p style={{ fontSize: 12, fontWeight: 600, color: "#6b5a48", margin: "0 0 4px", letterSpacing: "0.5px" }}>3. Click any node to enter family member details</p>
         <p style={{ fontSize: 11, color: "#c4a882", margin: 0, fontStyle: "italic" }}>
           Please do not close or refresh this page {"\u2014"} your information will not be saved until you submit.
         </p>
@@ -576,9 +398,9 @@ export default function FolktalesTree() {
         <svg viewBox={`0 0 ${svgW} ${svgH}`} width="100%" style={{ display: "block" }}>
           {showGP && <text x={16} y={gpY + nodeH / 2} textAnchor="start" dominantBaseline="central" fontSize={9} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5" transform={`rotate(-90 16 ${gpY + nodeH / 2})`}>GEN 3</text>}
           <text x={16} y={pY + nodeH / 2} textAnchor="start" dominantBaseline="central" fontSize={9} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5" transform={`rotate(-90 16 ${pY + nodeH / 2})`}>GEN 2</text>
-          <text x={16} y={cplY + nodeH / 2} textAnchor="start" dominantBaseline="central" fontSize={9} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5" transform={`rotate(-90 16 ${cplY + nodeH / 2})`}>GEN 1</text>
+          <text x={16} y={cplY + cplNodeH / 2} textAnchor="start" dominantBaseline="central" fontSize={9} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5" transform={`rotate(-90 16 ${cplY + cplNodeH / 2})`}>GEN 1</text>
 
-          {/* GP branches (only if 3gen) */}
+          {/* GP → Parent branches */}
           {showGP && <>
             <HBranch parentX={s1fX} parentY={pY} childXs={[s1gf_fX, s1gf_mX]} childY={gpY + nodeH} />
             <HBranch parentX={s1mX} parentY={pY} childXs={[s1gm_fX, s1gm_mX]} childY={gpY + nodeH} />
@@ -586,40 +408,24 @@ export default function FolktalesTree() {
             <HBranch parentX={s2mX} parentY={pY} childXs={[s2gm_fX, s2gm_mX]} childY={gpY + nodeH} />
           </>}
 
-          {/* Parent-to-Couple branches (parents are above, spouses below) */}
-          {(() => {
-            const midY1 = pY + nodeH + (cplY - pY - nodeH) * 0.5;
-            return <>
-              <line x1={sp1X} y1={cplY} x2={sp1X} y2={midY1} stroke="#d4c4ac" strokeWidth="1.2" />
-              <line x1={s1fX} y1={midY1} x2={s1mX} y2={midY1} stroke="#d4c4ac" strokeWidth="1.2" />
-              <line x1={s1fX} y1={pY + nodeH} x2={s1fX} y2={midY1} stroke="#d4c4ac" strokeWidth="1.2" />
-              <line x1={s1mX} y1={pY + nodeH} x2={s1mX} y2={midY1} stroke="#d4c4ac" strokeWidth="1.2" />
-
-              <line x1={sp2X} y1={cplY} x2={sp2X} y2={midY1} stroke="#d4c4ac" strokeWidth="1.2" />
-              <line x1={s2fX} y1={midY1} x2={s2mX} y2={midY1} stroke="#d4c4ac" strokeWidth="1.2" />
-              <line x1={s2fX} y1={pY + nodeH} x2={s2fX} y2={midY1} stroke="#d4c4ac" strokeWidth="1.2" />
-              <line x1={s2mX} y1={pY + nodeH} x2={s2mX} y2={midY1} stroke="#d4c4ac" strokeWidth="1.2" />
-            </>;
-          })()}
+          {/* Parent → Spouse branches (using BranchUp: spouse at bottom, parents at top) */}
+          <BranchUp bottomX={sp1X} bottomY={cplY} topXs={[s1fX, s1mX]} topY={pY + nodeH} />
+          <BranchUp bottomX={sp2X} bottomY={cplY} topXs={[s2fX, s2mX]} topY={pY + nodeH} />
 
           {/* Couple connector */}
-          <line x1={sp1X + 49} y1={cplY + nodeH / 2} x2={sp2X - 49} y2={cplY + nodeH / 2} stroke="#c4a882" strokeWidth="1.5" strokeDasharray="4 3" />
-          <circle cx={centerX} cy={cplY + nodeH / 2} r={4} fill="#faf7f1" stroke="#c4a882" strokeWidth="1" />
-          <text x={centerX} y={cplY + nodeH / 2 + 0.5} textAnchor="middle" dominantBaseline="central" fontSize={7} fill="#c4a882">{"\u2665"}</text>
+          <line x1={sp1X + cplNodeW / 2} y1={cplY + cplNodeH / 2} x2={sp2X - cplNodeW / 2} y2={cplY + cplNodeH / 2} stroke="#c4a882" strokeWidth="1.5" strokeDasharray="4 3" />
+          <circle cx={cx} cy={cplY + cplNodeH / 2} r={4} fill="#f5f0e6" stroke="#c4a882" strokeWidth="1" />
+          <text x={cx} y={cplY + cplNodeH / 2 + 0.5} textAnchor="middle" dominantBaseline="central" fontSize={7} fill="#c4a882">{"\u2665"}</text>
 
-          {isCouple && (
-            <>
-              <line x1={centerX} y1={cplY + nodeH} x2={centerX} y2={marriageY} stroke="#c4a882" strokeWidth="1.2" />
-              {chCount > 0 && <line x1={centerX} y1={marriageY + 60} x2={centerX} y2={chY - 14} stroke="#d4c4ac" strokeWidth="1.2" />}
-            </>
-          )}
-
-          {chCount > 0 && (
-            <HBranch parentX={centerX} parentY={isCouple ? chY - 14 : cplY + nodeH} childXs={data.children.map((_, i) => chStartX + i * chSpread)} childY={chY} />
-          )}
-          {!isCouple && chCount > 0 && (
-            <line x1={centerX} y1={cplY + nodeH} x2={centerX} y2={cplY + nodeH + (chY - cplY - nodeH) * 0.5} stroke="#d4c4ac" strokeWidth="1.2" />
-          )}
+          {/* Couple → Marriage → Children */}
+          {isCouple && <>
+            <line x1={coupleCenterX} y1={cplY + cplNodeH} x2={coupleCenterX} y2={marriageY} stroke="#c4a882" strokeWidth="1.2" />
+            {childCount > 0 && <line x1={coupleCenterX} y1={marriageY + 60} x2={coupleCenterX} y2={chY - 14} stroke="#d4c4ac" strokeWidth="1.2" />}
+            {childCount > 0 && <HBranch parentX={coupleCenterX} parentY={chY - 14} childXs={data.children.slice(0, childCount).map((_, i) => chStartX + i * chSpread)} childY={chY} />}
+          </>}
+          {!isCouple && <>
+            <line x1={coupleCenterX} y1={cplY + cplNodeH} x2={coupleCenterX} y2={chY} stroke="#d4c4ac" strokeWidth="1.2" />
+          </>}
 
           {/* Side labels */}
           <text x={(s1fX + s1mX) / 2} y={pY - 10} textAnchor="middle" fontSize={8.5} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5">
@@ -628,9 +434,9 @@ export default function FolktalesTree() {
           <text x={(s2fX + s2mX) / 2} y={pY - 10} textAnchor="middle" fontSize={8.5} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5">
             {data.spouse2.name ? data.spouse2.name.split(" ")[0].toUpperCase() + "'S SIDE" : "SPOUSE 2'S SIDE"}
           </text>
-          <line x1={centerX} y1={showGP ? gpY : pY} x2={centerX} y2={pY + nodeH} stroke="#e8dfd0" strokeWidth="0.5" strokeDasharray="3 5" />
+          <line x1={cx} y1={showGP ? gpY : pY} x2={cx} y2={pY + nodeH} stroke="#e8dfd0" strokeWidth="0.5" strokeDasharray="3 5" />
 
-          {/* GP nodes (only if 3gen) */}
+          {/* GP nodes */}
           {showGP && <>
             <TreeNode id="s1_gf_father" label="Grandparent" person={data.s1_gf_father} onClick={handleNodeClick} x={s1gf_fX} y={gpY} />
             <TreeNode id="s1_gf_mother" label="Grandparent" person={data.s1_gf_mother} onClick={handleNodeClick} x={s1gf_mX} y={gpY} />
@@ -649,25 +455,29 @@ export default function FolktalesTree() {
           <TreeNode id="s2_mother" label="Parent" person={data.s2_mother} onClick={handleNodeClick} x={s2mX} y={pY} />
 
           {/* Couple */}
-          <TreeNode id="spouse1" label="Spouse" person={data.spouse1} onClick={handleNodeClick} x={sp1X} y={cplY} w={120} h={56} />
-          <TreeNode id="spouse2" label="Spouse" person={data.spouse2} onClick={handleNodeClick} x={sp2X} y={cplY} w={120} h={56} />
+          <TreeNode id="spouse1" label="Spouse" person={data.spouse1} onClick={handleNodeClick} x={sp1X} y={cplY} w={cplNodeW} h={cplNodeH} />
+          <TreeNode id="spouse2" label="Spouse" person={data.spouse2} onClick={handleNodeClick} x={sp2X} y={cplY} w={cplNodeW} h={cplNodeH} />
 
-          {isCouple && <MarriageNode marriage={data.marriage} onClick={handleNodeClick} x={centerX} y={marriageY} />}
+          {/* Marriage node */}
+          {isCouple && <MarriageNode marriage={data.marriage} onClick={handleNodeClick} x={coupleCenterX} y={marriageY} />}
 
-          {data.children.map((child, i) => (
-            <TreeNode key={i} id={`child_${i}`} label="Child" person={child} onClick={handleNodeClick} x={chStartX + i * chSpread} y={chY} />
+          {/* Children */}
+          {data.children.slice(0, childCount).map((child, i) => (
+            <TreeNode key={i} id={`child_${i}`} label="Child" person={child} onClick={handleNodeClick} x={edition === "child" ? coupleCenterX : chStartX + i * chSpread} y={chY} />
           ))}
-          {chCount > 0 && <text x={centerX} y={chY + nodeH + 20} textAnchor="middle" fontSize={8.5} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5">CHILDREN</text>}
+          {childCount > 0 && <text x={edition === "child" ? coupleCenterX : cx} y={chY + nodeH + 20} textAnchor="middle" fontSize={8.5} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5">CHILDREN</text>}
         </svg>
 
-        {/* Add/remove children */}
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 4 }}>
-          <button onClick={removeChild} disabled={data.children.length <= 0}
-            style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid #ddd5c6", background: "#fff", fontSize: 16, color: "#9a8468", cursor: data.children.length <= 0 ? "not-allowed" : "pointer", opacity: data.children.length <= 0 ? 0.3 : 1, display: "flex", alignItems: "center", justifyContent: "center" }}>{"\u2212"}</button>
-          <span style={{ fontSize: 11, color: "#9a8468", alignSelf: "center" }}>{chCount} child{chCount !== 1 ? "ren" : ""}</span>
-          <button onClick={addChild} disabled={data.children.length >= 10}
-            style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid #c4a882", background: "rgba(196,168,130,.08)", fontSize: 16, color: "#6b4c3b", cursor: data.children.length >= 10 ? "not-allowed" : "pointer", opacity: data.children.length >= 10 ? 0.3 : 1, display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
-        </div>
+        {/* Add/remove children — couple edition only */}
+        {isCouple && (
+          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 4 }}>
+            <button onClick={removeChild} disabled={data.children.length <= 0}
+              style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid #ddd5c6", background: "#fff", fontSize: 16, color: "#9a8468", cursor: data.children.length <= 0 ? "not-allowed" : "pointer", opacity: data.children.length <= 0 ? 0.3 : 1, display: "flex", alignItems: "center", justifyContent: "center" }}>{"\u2212"}</button>
+            <span style={{ fontSize: 11, color: "#9a8468", alignSelf: "center" }}>{data.children.length} child{data.children.length !== 1 ? "ren" : ""}</span>
+            <button onClick={addChild} disabled={data.children.length >= 10}
+              style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid #c4a882", background: "rgba(196,168,130,.08)", fontSize: 16, color: "#6b4c3b", cursor: data.children.length >= 10 ? "not-allowed" : "pointer", opacity: data.children.length >= 10 ? 0.3 : 1, display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+          </div>
+        )}
 
         {/* Popups */}
         {editing && editing.id === "marriage" && (
@@ -678,13 +488,36 @@ export default function FolktalesTree() {
         )}
       </div>
 
-      {/* Progress bar */}
-      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 28px 32px", display: "flex", justifyContent: "center" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", background: "#fff", borderRadius: 10, border: "1px solid #e8e2da" }}>
-          <div style={{ width: 120, height: 4, background: "#ece4d6", borderRadius: 2, overflow: "hidden" }}>
-            <div style={{ width: `${totalNodes > 0 ? (completedNodes / totalNodes) * 100 : 0}%`, height: "100%", background: "linear-gradient(90deg,#6b4c3b,#c4a882)", borderRadius: 2, transition: "width .4s ease" }} />
+      {/* Bottom section: customer details + progress + submit */}
+      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 28px 40px" }}>
+        {/* Customer fields */}
+        <div style={{ padding: "16px", border: "1px solid #e0d5c4", borderRadius: 12, background: "rgba(255,253,249,0.85)", marginBottom: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+            <Field label="Email address" value={data.customer.email} onChange={v => setData(p => ({ ...p, customer: { ...p.customer, email: v } }))} placeholder="your@email.com" type="email" />
+            <div>
+              <Field label="Etsy order number (if applicable)" value={data.customer.orderNumber} onChange={v => setData(p => ({ ...p, customer: { ...p.customer, orderNumber: v } }))} placeholder="e.g. #1234567890" />
+              <p style={{ fontSize: 10.5, color: "#b8a890", margin: "-6px 0 4px", fontStyle: "italic" }}>Find this in your Etsy order confirmation email</p>
+            </div>
           </div>
-          <span style={{ fontSize: 11, color: "#9a8468" }}>{totalNodes > 0 ? Math.round((completedNodes / totalNodes) * 100) : 0}% complete</span>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 12.5, color: "#6b5a48", userSelect: "none" }}>
+            <input type="checkbox" checked={data.customer.mailingList} onChange={e => setData(p => ({ ...p, customer: { ...p.customer, mailingList: e.target.checked } }))}
+              style={{ width: 16, height: 16, accentColor: "#6b4c3b", cursor: "pointer" }} />
+            Keep me updated on new collections, designs, and sales
+          </label>
+        </div>
+
+        {/* Progress + submit row */}
+        <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", background: "rgba(255,255,255,0.7)", borderRadius: 10, border: "1px solid #e8e2da" }}>
+            <div style={{ width: 100, height: 4, background: "#ece4d6", borderRadius: 2, overflow: "hidden" }}>
+              <div style={{ width: `${totalNodes > 0 ? (completedNodes / totalNodes) * 100 : 0}%`, height: "100%", background: "linear-gradient(90deg,#6b4c3b,#c4a882)", borderRadius: 2, transition: "width .4s ease" }} />
+            </div>
+            <span style={{ fontSize: 11, color: "#9a8468" }}>{completedNodes}/{totalNodes}</span>
+          </div>
+          <button onClick={handleSubmit} disabled={completedNodes < 2 || submitState === "submitting"}
+            style={{ padding: "12px 28px", borderRadius: 10, border: "none", background: completedNodes >= 2 && submitState !== "submitting" ? "#6b4c3b" : "#c4b8a4", color: "#fff", fontSize: 14, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: completedNodes >= 2 && submitState !== "submitting" ? "pointer" : "not-allowed", transition: "background .2s" }}>
+            {submitState === "submitting" ? "Submitting..." : "Submit order \u2192"}
+          </button>
         </div>
       </div>
     </div>
