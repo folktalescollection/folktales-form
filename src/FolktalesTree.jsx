@@ -333,7 +333,24 @@ export default function FolktalesTree() {
 
   if (submitState === "success") {
     return (
-      <div style={{ minHeight: "100vh", background: "#f5f0e6 url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22300%22 height=%22300%22 filter=%22url(%23n)%22 opacity=%220.06%22/%3E%3C/svg%3E')", fontFamily: "'DM Sans',sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div className="parchment-page" style={{ minHeight: "100vh", background: "#ede4d3", fontFamily: "'DM Sans',sans-serif", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+        <style>{`
+          .parchment-page::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background-image:
+              url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23a)' opacity='0.14'/%3E%3C/svg%3E"),
+              url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.012' numOctaves='3' seed='5'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='800' height='800' filter='url(%23b)' opacity='0.08'/%3E%3C/svg%3E"),
+              radial-gradient(ellipse at 50% 0%, transparent 50%, rgba(120,90,50,0.10) 100%),
+              radial-gradient(ellipse at 0% 50%, rgba(100,75,40,0.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 100% 50%, rgba(100,75,40,0.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 50% 100%, rgba(90,65,30,0.12) 0%, transparent 50%);
+          }
+          .parchment-page > * { position: relative; z-index: 1; }
+        `}</style>
         <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
         <div style={{ textAlign: "center", padding: "60px 28px", maxWidth: 500 }}>
           <img src="/Logo-HighRes.png" alt="Folktales Collection" style={{ width: 88, height: 88, borderRadius: "50%", display: "block", margin: "0 auto 20px" }} />
@@ -346,7 +363,24 @@ export default function FolktalesTree() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f5f0e6 url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22300%22 height=%22300%22 filter=%22url(%23n)%22 opacity=%220.06%22/%3E%3C/svg%3E')", fontFamily: "'DM Sans',sans-serif" }}>
+    <div className="parchment-page" style={{ minHeight: "100vh", background: "#ede4d3", fontFamily: "'DM Sans',sans-serif", position: "relative" }}>
+      <style>{`
+        .parchment-page::before {
+          content: '';
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          z-index: 0;
+          background-image:
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23a)' opacity='0.14'/%3E%3C/svg%3E"),
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.012' numOctaves='3' seed='5'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='800' height='800' filter='url(%23b)' opacity='0.08'/%3E%3C/svg%3E"),
+            radial-gradient(ellipse at 50% 0%, transparent 50%, rgba(120,90,50,0.10) 100%),
+            radial-gradient(ellipse at 0% 50%, rgba(100,75,40,0.08) 0%, transparent 60%),
+            radial-gradient(ellipse at 100% 50%, rgba(100,75,40,0.08) 0%, transparent 60%),
+            radial-gradient(ellipse at 50% 100%, rgba(90,65,30,0.12) 0%, transparent 50%);
+        }
+        .parchment-page > * { position: relative; z-index: 1; }
+      `}</style>
       <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
       {submitState === "error" && (
@@ -397,24 +431,33 @@ export default function FolktalesTree() {
         </div>
       </div>
 
+      {/* Divider */}
+      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "18px 28px 0" }}><div style={{ height: 1, background: "linear-gradient(90deg, transparent, #c4a882, transparent)" }} /></div>
+
       {/* Step 1 */}
-      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "18px 28px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-        <p style={{ fontSize: 12, fontWeight: 600, color: "#6b5a48", margin: 0, letterSpacing: "0.5px" }}>1. Select number of generations</p>
+      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "16px 28px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+        <p style={{ fontSize: 14, fontWeight: 600, color: "#5a3e28", margin: 0, letterSpacing: "0.3px", fontFamily: "'Playfair Display',serif" }}>1. Select number of generations</p>
         <Toggle options={[{ key: 2, label: "2 generations" }, { key: 3, label: "3 generations" }]} value={genCount} onChange={setGenCount} />
       </div>
 
+      {/* Divider */}
+      <div style={{ maxWidth: 600, margin: "0 auto", padding: "14px 28px 0" }}><div style={{ height: 1, background: "linear-gradient(90deg, transparent, #d4c4ac, transparent)" }} /></div>
+
       {/* Step 2 */}
       <div style={{ maxWidth: 1120, margin: "0 auto", padding: "14px 28px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-        <p style={{ fontSize: 12, fontWeight: 600, color: "#6b5a48", margin: 0, letterSpacing: "0.5px" }}>2. Select edition</p>
+        <p style={{ fontSize: 14, fontWeight: 600, color: "#5a3e28", margin: 0, letterSpacing: "0.3px", fontFamily: "'Playfair Display',serif" }}>2. Select edition</p>
         <Toggle options={[{ key: "child", label: "Child edition", icon: "\ud83c\udf33" }, { key: "couple", label: "Couple / family edition", icon: "\ud83d\udc8d" }]} value={edition} onChange={setEdition} />
         <p style={{ fontSize: 12, color: "#9a8468", margin: 0, textAlign: "center" }}>
           {isCouple ? "Couple / family edition \u2014 celebrate the union with marriage details at the heart of your tree" : "Child edition \u2014 the child's name anchors the tree trunk"}
         </p>
       </div>
 
+      {/* Divider */}
+      <div style={{ maxWidth: 600, margin: "0 auto", padding: "14px 28px 0" }}><div style={{ height: 1, background: "linear-gradient(90deg, transparent, #d4c4ac, transparent)" }} /></div>
+
       {/* Step 3 */}
       <div style={{ maxWidth: 1120, margin: "0 auto", padding: "14px 28px 0", textAlign: "center" }}>
-        <p style={{ fontSize: 12, fontWeight: 600, color: "#6b5a48", margin: "0 0 4px", letterSpacing: "0.5px" }}>3. Click any node to enter family member details</p>
+        <p style={{ fontSize: 14, fontWeight: 600, color: "#5a3e28", margin: "0 0 4px", letterSpacing: "0.3px", fontFamily: "'Playfair Display',serif" }}>3. Click any node to enter family member details</p>
         <p style={{ fontSize: 11, color: "#c4a882", margin: 0, fontStyle: "italic" }}>
           Please do not close or refresh this page {"\u2014"} your information will not be saved until you submit.
         </p>
@@ -492,7 +535,7 @@ export default function FolktalesTree() {
           {data.children.slice(0, childCount).map((child, i) => (
             <TreeNode key={i} id={`child_${i}`} label="Child" person={child} onClick={handleNodeClick} x={edition === "child" ? coupleCenterX : chStartX + i * chSpread} y={chY} />
           ))}
-          {childCount > 0 && <text x={edition === "child" ? coupleCenterX : cx} y={chY + nodeH + 20} textAnchor="middle" fontSize={8.5} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5">CHILDREN</text>}
+          {childCount > 0 && isCouple && <text x={cx} y={chY + nodeH + 20} textAnchor="middle" fontSize={8.5} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5">CHILDREN</text>}
         </svg>
 
         {/* Add/remove children — couple edition only */}
