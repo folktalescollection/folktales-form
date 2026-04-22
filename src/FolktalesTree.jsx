@@ -17,7 +17,8 @@ const INIT = {
   s2_gf_father: ep(), s2_gf_mother: ep(),
   s2_gm_father: ep(), s2_gm_mother: ep(),
   marriage: emptyMarriage(),
-  children: [ep()],
+  childEditionChild: ep(),
+  coupleChildren: [ep()],
 };
 
 const COUPLE_IDS = ["spouse1", "spouse2"];
@@ -261,11 +262,13 @@ export default function FolktalesTree() {
         S2_GP2_Name: data.s2_gf_mother.name, S2_GP2_Dates: data.s2_gf_mother.dates, S2_GP2_Birthplace: data.s2_gf_mother.birthplace,
         S2_GP3_Name: data.s2_gm_father.name, S2_GP3_Dates: data.s2_gm_father.dates, S2_GP3_Birthplace: data.s2_gm_father.birthplace,
         S2_GP4_Name: data.s2_gm_mother.name, S2_GP4_Dates: data.s2_gm_mother.dates, S2_GP4_Birthplace: data.s2_gm_mother.birthplace,
-        Child1_Name: data.children[0]?.name || "", Child1_Dates: data.children[0]?.dates || "", Child1_Birthplace: data.children[0]?.birthplace || "",
-        Child2_Name: data.children[1]?.name || "", Child2_Dates: data.children[1]?.dates || "", Child2_Birthplace: data.children[1]?.birthplace || "",
-        Child3_Name: data.children[2]?.name || "", Child3_Dates: data.children[2]?.dates || "", Child3_Birthplace: data.children[2]?.birthplace || "",
-        Child4_Name: data.children[3]?.name || "", Child4_Dates: data.children[3]?.dates || "", Child4_Birthplace: data.children[3]?.birthplace || "",
-        Child5_Name: data.children[4]?.name || "", Child5_Dates: data.children[4]?.dates || "", Child5_Birthplace: data.children[4]?.birthplace || "",
+        Child1_Name: isCouple ? (data.coupleChildren[0]?.name || "") : data.childEditionChild.name,
+        Child1_Dates: isCouple ? (data.coupleChildren[0]?.dates || "") : data.childEditionChild.dates,
+        Child1_Birthplace: isCouple ? (data.coupleChildren[0]?.birthplace || "") : data.childEditionChild.birthplace,
+        Child2_Name: data.coupleChildren[1]?.name || "", Child2_Dates: data.coupleChildren[1]?.dates || "", Child2_Birthplace: data.coupleChildren[1]?.birthplace || "",
+        Child3_Name: data.coupleChildren[2]?.name || "", Child3_Dates: data.coupleChildren[2]?.dates || "", Child3_Birthplace: data.coupleChildren[2]?.birthplace || "",
+        Child4_Name: data.coupleChildren[3]?.name || "", Child4_Dates: data.coupleChildren[3]?.dates || "", Child4_Birthplace: data.coupleChildren[3]?.birthplace || "",
+        Child5_Name: data.coupleChildren[4]?.name || "", Child5_Dates: data.coupleChildren[4]?.dates || "", Child5_Birthplace: data.coupleChildren[4]?.birthplace || "",
       };
       const response = await fetch("https://folktales-form-proxy.twilight-violet-b3b0.workers.dev/", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
@@ -278,7 +281,8 @@ export default function FolktalesTree() {
   const handleNodeClick = useCallback((id, rect) => { setEditing({ id, rect }); }, []);
   const handleSavePerson = useCallback((id, draft) => {
     setData(prev => {
-      if (id.startsWith("child_")) { const idx = parseInt(id.split("_")[1]); const ch = [...prev.children]; ch[idx] = draft; return { ...prev, children: ch }; }
+      if (id === "childEditionChild") return { ...prev, childEditionChild: draft };
+      if (id.startsWith("coupleChild_")) { const idx = parseInt(id.split("_")[1]); const ch = [...prev.coupleChildren]; ch[idx] = draft; return { ...prev, coupleChildren: ch }; }
       return { ...prev, [id]: draft };
     });
     setEditing(null);
@@ -286,20 +290,25 @@ export default function FolktalesTree() {
   const handleSaveMarriage = useCallback((draft) => { setData(prev => ({ ...prev, marriage: draft })); setEditing(null); }, []);
 
   // Child edition: exactly 1 child, no add/remove. Couple edition: add/remove children
-  const addChild = () => { if (isCouple && data.children.length < 10) setData(p => ({ ...p, children: [...p.children, ep()] })); };
-  const removeChild = () => { if (isCouple && data.children.length > 0) setData(p => ({ ...p, children: p.children.slice(0, -1) })); };
+  const addChild = () => { if (isCouple && data.coupleChildren.length < 10) setData(p => ({ ...p, coupleChildren: [...p.coupleChildren, ep()] })); };
+  const removeChild = () => { if (isCouple && data.coupleChildren.length > 0) setData(p => ({ ...p, coupleChildren: p.coupleChildren.slice(0, -1) })); };
 
-  const getPerson = (id) => { if (id.startsWith("child_")) return data.children[parseInt(id.split("_")[1])]; return data[id]; };
+  const getPerson = (id) => {
+    if (id === "childEditionChild") return data.childEditionChild;
+    if (id.startsWith("coupleChild_")) return data.coupleChildren[parseInt(id.split("_")[1])];
+    return data[id];
+  };
   const getLabel = (id) => {
     const map = { spouse1: "Spouse", spouse2: "Spouse", s1_father: "Parent", s1_mother: "Parent", s2_father: "Parent", s2_mother: "Parent", s1_gf_father: "Grandparent", s1_gf_mother: "Grandparent", s1_gm_father: "Grandparent", s1_gm_mother: "Grandparent", s2_gf_father: "Grandparent", s2_gf_mother: "Grandparent", s2_gm_father: "Grandparent", s2_gm_mother: "Grandparent" };
-    if (id.startsWith("child_")) return "Child";
+    if (id === "childEditionChild" || id.startsWith("coupleChild_")) return "Child";
     return map[id] || id;
   };
 
-  const childCount = edition === "child" ? 1 : data.children.length;
+  const activeChildren = isCouple ? data.coupleChildren : [data.childEditionChild];
+  const childCount = activeChildren.length;
   const activeIds = [...COUPLE_IDS, ...PARENT_IDS, ...(showGP ? GP_IDS : [])];
   const totalNodes = activeIds.length + childCount + (isCouple ? 1 : 0);
-  const completedNodes = activeIds.filter(id => done(data[id])).length + data.children.slice(0, childCount).filter(c => done(c)).length + (isCouple && doneMar(data.marriage) ? 1 : 0);
+  const completedNodes = activeIds.filter(id => done(data[id])).length + activeChildren.filter(c => done(c)).length + (isCouple && doneMar(data.marriage) ? 1 : 0);
 
   // Layout
   const svgW = 1100;
@@ -360,8 +369,8 @@ export default function FolktalesTree() {
         <div style={{ textAlign: "center", padding: "60px 28px", maxWidth: 500 }}>
           <img src="/Logo-HighRes.png" alt="Folktales Collection" style={{ width: 88, height: 88, borderRadius: "50%", display: "block", margin: "0 auto 20px" }} />
           <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 28, fontWeight: 700, color: "#3d2e1e", margin: "0 0 12px" }}>Thank you!</h1>
-          <p style={{ fontSize: 15, color: "#6b5a48", lineHeight: 1.6, margin: "0 0 8px" }}>Your family tree information has been submitted successfully.</p>
-          <p style={{ fontSize: 13, color: "#9a8468", lineHeight: 1.6, margin: 0 }}>We'll begin working on your custom artwork and will be in touch{data.customer.email ? ` at ${data.customer.email}` : ""} with updates.</p>
+          <p style={{ fontSize: 15, color: "#6b5a48", lineHeight: 1.6, margin: "0 0 12px" }}>Your family tree information has been submitted successfully.</p>
+          <p style={{ fontSize: 13, color: "#9a8468", lineHeight: 1.7, margin: 0 }}>We'll begin working on your custom artwork and will be in touch with your proof soon. If you placed your order on Etsy, we will be in touch via Etsy messages; if you ordered from our website, we'll be in touch over email.</p>
         </div>
       </div>
     );
@@ -422,8 +431,8 @@ export default function FolktalesTree() {
             <div style={{ fontSize: 20, fontWeight: 700, color: "#5a3e28", fontFamily: "'Playfair Display',serif", lineHeight: 1 }}>{completedNodes}/{totalNodes}</div>
             <div style={{ fontSize: 9, color: "#9a8468", letterSpacing: "1px", textTransform: "uppercase", marginTop: 2 }}>completed</div>
           </div>
-          <button onClick={handleSubmit} disabled={completedNodes < 2 || submitState === "submitting"}
-            style={{ padding: "10px 22px", borderRadius: 8, border: "none", background: submitState === "submitting" ? "#c4b8a4" : completedNodes >= totalNodes ? "#b43d09" : completedNodes >= 2 ? "#6b4c3b" : "#c4b8a4", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: completedNodes >= 2 && submitState !== "submitting" ? "pointer" : "not-allowed", transition: "background .3s" }}>
+          <button onClick={handleSubmit} disabled={completedNodes < totalNodes || submitState === "submitting"}
+            style={{ padding: "10px 22px", borderRadius: 8, border: "none", background: submitState === "submitting" ? "#c4b8a4" : completedNodes >= totalNodes ? "#b43d09" : "#c4b8a4", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: completedNodes >= totalNodes && submitState !== "submitting" ? "pointer" : "not-allowed", transition: "background .3s" }}>
             {submitState === "submitting" ? "Submitting..." : "Submit order \u2192"}
           </button>
         </div>
@@ -473,10 +482,7 @@ export default function FolktalesTree() {
 
       {/* Step 3 */}
       <div style={{ maxWidth: 1120, margin: "0 auto", padding: "14px 28px 0", textAlign: "center" }}>
-        <p style={{ fontSize: 14, fontWeight: 600, color: "#5a3e28", margin: "0 0 4px", letterSpacing: "0.3px", fontFamily: "'Playfair Display',serif" }}>3. Click any node to enter family member details</p>
-        <p style={{ fontSize: 11, color: "#c4a882", margin: 0, fontStyle: "italic" }}>
-          Please do not close or refresh this page {"\u2014"} your information will not be saved until you submit.
-        </p>
+        <p style={{ fontSize: 14, fontWeight: 600, color: "#5a3e28", margin: 0, letterSpacing: "0.3px", fontFamily: "'Playfair Display',serif" }}>3. Click any node to enter family member details</p>
       </div>
 
       {/* Tree */}
@@ -507,7 +513,7 @@ export default function FolktalesTree() {
           {isCouple && <>
             <line x1={coupleCenterX} y1={cplY + cplNodeH} x2={coupleCenterX} y2={marriageY} stroke="#c4a882" strokeWidth="1.2" />
             {childCount > 0 && <line x1={coupleCenterX} y1={marriageY + 60} x2={coupleCenterX} y2={chY - 14} stroke="#d4c4ac" strokeWidth="1.2" />}
-            {childCount > 0 && <HBranch parentX={coupleCenterX} parentY={chY - 14} childXs={data.children.slice(0, childCount).map((_, i) => chStartX + i * chSpread)} childY={chY} />}
+            {childCount > 0 && <HBranch parentX={coupleCenterX} parentY={chY - 14} childXs={activeChildren.map((_, i) => chStartX + i * chSpread)} childY={chY} />}
           </>}
           {!isCouple && <>
             <line x1={coupleCenterX} y1={cplY + cplNodeH} x2={coupleCenterX} y2={chY} stroke="#d4c4ac" strokeWidth="1.2" />
@@ -548,8 +554,11 @@ export default function FolktalesTree() {
           {isCouple && <MarriageNode marriage={data.marriage} onClick={handleNodeClick} x={coupleCenterX} y={marriageY} />}
 
           {/* Children */}
-          {data.children.slice(0, childCount).map((child, i) => (
-            <TreeNode key={i} id={`child_${i}`} label="Child" person={child} onClick={handleNodeClick} x={edition === "child" ? coupleCenterX : chStartX + i * chSpread} y={chY} />
+          {!isCouple && (
+            <TreeNode id="childEditionChild" label="Child" person={data.childEditionChild} onClick={handleNodeClick} x={coupleCenterX} y={chY} />
+          )}
+          {isCouple && data.coupleChildren.map((child, i) => (
+            <TreeNode key={i} id={`coupleChild_${i}`} label="Child" person={child} onClick={handleNodeClick} x={chStartX + i * chSpread} y={chY} />
           ))}
           {childCount > 0 && isCouple && <text x={cx} y={chY + nodeH + 20} textAnchor="middle" fontSize={8.5} fill="#bfb49e" fontFamily="'DM Sans',sans-serif" fontWeight="600" letterSpacing="1.5">CHILDREN</text>}
         </svg>
@@ -557,11 +566,11 @@ export default function FolktalesTree() {
         {/* Add/remove children — couple edition only */}
         {isCouple && (
           <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 4 }}>
-            <button onClick={removeChild} disabled={data.children.length <= 0}
-              style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid #ddd5c6", background: "#fff", fontSize: 16, color: "#9a8468", cursor: data.children.length <= 0 ? "not-allowed" : "pointer", opacity: data.children.length <= 0 ? 0.3 : 1, display: "flex", alignItems: "center", justifyContent: "center" }}>{"\u2212"}</button>
-            <span style={{ fontSize: 11, color: "#9a8468", alignSelf: "center" }}>{data.children.length} child{data.children.length !== 1 ? "ren" : ""}</span>
-            <button onClick={addChild} disabled={data.children.length >= 10}
-              style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid #c4a882", background: "rgba(196,168,130,.08)", fontSize: 16, color: "#6b4c3b", cursor: data.children.length >= 10 ? "not-allowed" : "pointer", opacity: data.children.length >= 10 ? 0.3 : 1, display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+            <button onClick={removeChild} disabled={data.coupleChildren.length <= 0}
+              style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid #ddd5c6", background: "#fff", fontSize: 16, color: "#9a8468", cursor: data.coupleChildren.length <= 0 ? "not-allowed" : "pointer", opacity: data.coupleChildren.length <= 0 ? 0.3 : 1, display: "flex", alignItems: "center", justifyContent: "center" }}>{"\u2212"}</button>
+            <span style={{ fontSize: 11, color: "#9a8468", alignSelf: "center" }}>{data.coupleChildren.length} child{data.coupleChildren.length !== 1 ? "ren" : ""}</span>
+            <button onClick={addChild} disabled={data.coupleChildren.length >= 10}
+              style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid #c4a882", background: "rgba(196,168,130,.08)", fontSize: 16, color: "#6b4c3b", cursor: data.coupleChildren.length >= 10 ? "not-allowed" : "pointer", opacity: data.coupleChildren.length >= 10 ? 0.3 : 1, display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
           </div>
         )}
 
@@ -572,6 +581,13 @@ export default function FolktalesTree() {
         {editing && editing.id !== "marriage" && (
           <PersonPopup person={getPerson(editing.id)} label={getLabel(editing.id)} anchorRect={editing.rect} containerRect={containerRef.current?.getBoundingClientRect()} onSave={(draft) => handleSavePerson(editing.id, draft)} />
         )}
+      </div>
+
+      {/* Exit warning at bottom */}
+      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "4px 28px 32px", textAlign: "center" }}>
+        <p style={{ fontSize: 11, color: "#c4a882", margin: 0, fontStyle: "italic" }}>
+          Please do not close or refresh this page {"\u2014"} your information will not be saved until you submit.
+        </p>
       </div>
 
     </div>
